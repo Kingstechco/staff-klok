@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Clocking App - Test Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, select, button { padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #007bff; color: white; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .result { margin-top: 20px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Staff Clocking App - Test Interface</h1>
+        
+        <div class="form-group">
+            <label for="staff-name">Staff Name:</label>
+            <input type="text" id="staff-name" name="staff-name" placeholder="Enter staff name">
+        </div>
+        
+        <div class="form-group">
+            <label for="staff-pin">PIN:</label>
+            <input type="password" id="staff-pin" name="staff-pin" placeholder="Enter PIN">
+        </div>
+        
+        <div class="form-group">
+            <label for="action-type">Action:</label>
+            <select id="action-type" name="action-type">
+                <option value="clock-in">Clock In</option>
+                <option value="clock-out">Clock Out</option>
+                <option value="break-start">Start Break</option>
+                <option value="break-end">End Break</option>
+            </select>
+        </div>
+        
+        <button id="submit-btn" onclick="handleSubmit()">Submit</button>
+        <button id="reset-btn" onclick="resetForm()">Reset</button>
+        
+        <div id="result" class="result" style="display: none;">
+            <h3>Result:</h3>
+            <p id="result-message"></p>
+        </div>
+    </div>
+    
+    <script>
+        function handleSubmit() {
+            const name = document.getElementById('staff-name').value;
+            const pin = document.getElementById('staff-pin').value;
+            const action = document.getElementById('action-type').value;
+            
+            if (!name || !pin) {
+                showResult('Please fill in all required fields!', 'error');
+                return;
+            }
+            
+            showResult(`${action.replace('-', ' ').toUpperCase()} recorded for ${name}`, 'success');
+        }
+        
+        function resetForm() {
+            document.getElementById('staff-name').value = '';
+            document.getElementById('staff-pin').value = '';
+            document.getElementById('action-type').value = 'clock-in';
+            document.getElementById('result').style.display = 'none';
+        }
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            const messageP = document.getElementById('result-message');
+            
+            messageP.textContent = message;
+            resultDiv.style.display = 'block';
+            resultDiv.style.backgroundColor = type === 'error' ? '#f8d7da' : '#d4edda';
+            resultDiv.style.color = type === 'error' ? '#721c24' : '#155724';
+        }
+    </script>
+</body>
+</html>
