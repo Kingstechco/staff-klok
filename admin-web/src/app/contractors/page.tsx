@@ -1,399 +1,562 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { contractorAPI } from '../../utils/api';
-
-interface ContractorStats {
-  monthlyHours: number;
-  pendingApprovals: number;
-  activeProjects: number;
-  lastActivity: number | null;
-}
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Contractor {
-  _id: string;
+  id: string;
   name: string;
-  email?: string;
-  contractorInfo?: {
-    businessName?: string;
-    clients: any[];
-    defaultProjectRate?: number;
-    specializations: string[];
-  };
-  stats: ContractorStats;
+  email: string;
+  department?: string;
+  contractingAgency?: string;
+  registrationStatus: 'invited' | 'setup_pending' | 'setup_completed' | 'active' | 'inactive';
+  autoClockingEnabled?: boolean;
+  processingMode?: 'proactive' | 'reactive' | 'weekly_batch';
+  manager?: { name: string; email: string };
+  isActive: boolean;
+  lastLogin?: string;
+  setupCompletedAt?: string;
 }
 
-interface DashboardData {
-  contractors: Contractor[];
-  summary: {
-    totalContractors: number;
-    totalMonthlyHours: number;
-    totalPendingApprovals: number;
-  };
+interface PendingContractor {
+  id: string;
+  name: string;
+  email: string;
+  department?: string;
+  contractingAgency?: string;
+  manager?: { name: string; email: string };
+  setupCompletedAt: string;
+  autoClockingSettings: any;
+  createdBy?: { name: string; email: string };
 }
 
-const ContractorManagementDashboard: React.FC = () => {
-  const { currentUser, currentTenant, canManageContractors } = useAuth();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+const AutoClockingModeLabels = {
+  proactive: 'Start of Day Auto-Clock',
+  reactive: 'End of Day Auto-Fill',
+  weekly_batch: 'Weekly Timesheet Generation'
+};
+
+const StatusLabels = {
+  invited: 'Invited',
+  setup_pending: 'Setup Pending',
+  setup_completed: 'Awaiting Approval',
+  active: 'Active',
+  inactive: 'Inactive'
+};
+
+const StatusColors = {
+  invited: 'text-yellow-600 bg-yellow-100',
+  setup_pending: 'text-blue-600 bg-blue-100',
+  setup_completed: 'text-orange-600 bg-orange-100',
+  active: 'text-green-600 bg-green-100',
+  inactive: 'text-gray-600 bg-gray-100'
+};
+
+export default function ContractorsPage() {
+  const { user, token } = useAuth();
+  const [contractors, setContractors] = useState<Contractor[]>([]);
+  const [pendingApprovals, setPendingApprovals] = useState<PendingContractor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedContractor, setSelectedContractor] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState<'active' | 'pending'>('active');
+  const [showInviteForm, setShowInviteForm] = useState(false);
+  const [inviteForm, setInviteForm] = useState({
+    name: '',
+    email: '',
+    contractingAgency: '',
+    department: '',
+    hourlyRate: '',
+    defaultSchedule: {
+      startTime: '09:00',
+      endTime: '17:00',
+      hoursPerDay: 8,
+      workDays: [1, 2, 3, 4, 5] // Mon-Fri
+    }
+  });
 
-  // Check permissions
-  if (!canManageContractors()) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-red-600 mb-4">Access Denied</h2>
-          <p className="text-gray-600">
-            You don't have permission to access the contractor management dashboard.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Load contractor data
   useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const data = await contractorAPI.getAllContractors({
-          status: filterStatus === 'all' ? undefined : filterStatus
-        });
-        
-        setDashboardData(data);
-      } catch (err: any) {
-        console.error('Failed to load contractor data:', err);
-        setError(err.message || 'Failed to load contractor data');
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchContractors();
+    fetchPendingApprovals();
+  }, [token]);
 
-    loadDashboardData();
-  }, [filterStatus]);
-
-  // Filter contractors based on search
-  const filteredContractors = dashboardData?.contractors.filter(contractor =>
-    contractor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contractor.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contractor.contractorInfo?.businessName?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
-
-  const handleDownloadTimesheet = async (contractorId: string, contractorName: string) => {
+  const fetchContractors = async () => {
     try {
-      const now = new Date();
-      const currentMonth = now.getMonth() + 1;
-      const currentYear = now.getFullYear();
-      
-      const blob = await contractorAPI.downloadContractorTimesheet(contractorId, {
-        month: currentMonth,
-        year: currentYear,
-        format: 'csv'
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contractor/contractors`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `timesheet-${contractorName.replace(/\s+/g, '_')}-${currentYear}-${currentMonth.toString().padStart(2, '0')}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err: any) {
-      console.error('Download failed:', err);
-      alert(`Failed to download timesheet: ${err.message}`);
+      if (response.ok) {
+        const data = await response.json();
+        setContractors(data.contractors || []);
+      } else {
+        throw new Error('Failed to fetch contractors');
+      }
+    } catch (err) {
+      setError('Failed to fetch contractors');
+      console.error(err);
     }
   };
 
-  const formatLastActivity = (timestamp: number | null) => {
-    if (!timestamp) return 'Never';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${Math.floor(diffInHours)} hours ago`;
-    if (diffInHours < 48) return 'Yesterday';
-    return date.toLocaleDateString();
+  const fetchPendingApprovals = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contractor/pending-approvals`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setPendingApprovals(data.contractors || []);
+      } else {
+        console.error('Failed to fetch pending approvals');
+      }
+    } catch (err) {
+      console.error('Error fetching pending approvals:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInviteContractor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contractor/invite`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...inviteForm,
+          hourlyRate: inviteForm.hourlyRate ? parseFloat(inviteForm.hourlyRate) : undefined
+        })
+      });
+
+      if (response.ok) {
+        alert('Contractor invited successfully! Setup link sent via email.');
+        setInviteForm({
+          name: '',
+          email: '',
+          contractingAgency: '',
+          department: '',
+          hourlyRate: '',
+          defaultSchedule: {
+            startTime: '09:00',
+            endTime: '17:00',
+            hoursPerDay: 8,
+            workDays: [1, 2, 3, 4, 5]
+          }
+        });
+        setShowInviteForm(false);
+        fetchContractors();
+      } else {
+        const error = await response.json();
+        alert('Failed to invite contractor: ' + error.error);
+      }
+    } catch (err) {
+      alert('Failed to invite contractor');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApproveContractor = async (contractorId: string, approved: boolean, rejectionReason?: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contractor/${contractorId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          approved,
+          rejectionReason: rejectionReason || undefined
+        })
+      });
+
+      if (response.ok) {
+        alert(approved ? 'Contractor approved successfully!' : 'Contractor registration rejected.');
+        fetchContractors();
+        fetchPendingApprovals();
+      } else {
+        const error = await response.json();
+        alert('Failed to process approval: ' + error.error);
+      }
+    } catch (err) {
+      alert('Failed to process approval');
+      console.error(err);
+    }
+  };
+
+  const toggleAutoClocking = async (contractorId: string, enabled: boolean) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contractor/${contractorId}/auto-clock/trigger`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ enabled })
+      });
+
+      if (response.ok) {
+        fetchContractors();
+      } else {
+        alert('Failed to update auto-clocking setting');
+      }
+    } catch (err) {
+      alert('Failed to update auto-clocking setting');
+      console.error(err);
+    }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="text-center mt-4 text-gray-600">Loading contractor dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-red-600 mb-4">Error</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Retry
-          </button>
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Contractor Management</h1>
-                <p className="text-gray-600">
-                  {currentTenant?.name} - {currentUser?.role === 'client_contact' ? 'Client Portal' : 'Admin Dashboard'}
-                </p>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Contractor Management</h1>
+          <p className="text-gray-600">Manage contractors, auto-clocking settings, and approvals</p>
+        </div>
+        <button
+          onClick={() => setShowInviteForm(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+        >
+          Invite Contractor
+        </button>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 font-semibold">{contractors.length}</span>
               </div>
-              <div className="flex space-x-3">
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value as any)}
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm"
-                >
-                  <option value="all">All Contractors</option>
-                  <option value="active">Active Only</option>
-                  <option value="inactive">Inactive Only</option>
-                </select>
-                <input
-                  type="text"
-                  placeholder="Search contractors..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm w-64"
-                />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Total Contractors</p>
+              <p className="text-lg font-semibold text-gray-900">{contractors.length}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-green-600 font-semibold">
+                  {contractors.filter(c => c.isActive).length}
+                </span>
               </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Active</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {contractors.filter(c => c.isActive).length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                <span className="text-orange-600 font-semibold">{pendingApprovals.length}</span>
+              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Pending Approval</p>
+              <p className="text-lg font-semibold text-gray-900">{pendingApprovals.length}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <span className="text-purple-600 font-semibold">
+                  {contractors.filter(c => c.autoClockingEnabled).length}
+                </span>
+              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Auto-Clocking Enabled</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {contractors.filter(c => c.autoClockingEnabled).length}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Summary Cards */}
-        {dashboardData?.summary && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">
-                        {dashboardData.summary.totalContractors}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Total Contractors</dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {dashboardData.summary.totalContractors} active
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('active')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'active'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Active Contractors ({contractors.filter(c => c.isActive).length})
+          </button>
+          <button
+            onClick={() => setActiveTab('pending')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'pending'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Pending Approvals ({pendingApprovals.length})
+          </button>
+        </nav>
+      </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs">⏱️</span>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Monthly Hours</dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {Math.round(dashboardData.summary.totalMonthlyHours)} hours
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs">⏳</span>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Pending Approvals</dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {dashboardData.summary.totalPendingApprovals}
-                        {dashboardData.summary.totalPendingApprovals > 0 && (
-                          <span className="text-sm text-yellow-600 ml-1">needs review</span>
-                        )}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Contractors Table */}
+      {/* Content */}
+      {activeTab === 'active' && (
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-              Contractor Overview ({filteredContractors.length})
-            </h3>
-            
-            {filteredContractors.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No contractors found matching your criteria.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Contractor
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Business Info
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Monthly Hours
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Pending Approvals
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Last Activity
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredContractors.map((contractor) => (
-                      <tr 
-                        key={contractor._id} 
-                        className={selectedContractor === contractor._id ? 'bg-blue-50' : 'hover:bg-gray-50'}
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {contractor.name}
-                            </div>
-                            {contractor.email && (
-                              <div className="text-sm text-gray-500">{contractor.email}</div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            {contractor.contractorInfo?.businessName && (
-                              <div className="text-sm text-gray-900">
-                                {contractor.contractorInfo.businessName}
-                              </div>
-                            )}
-                            {contractor.contractorInfo?.specializations && contractor.contractorInfo.specializations.length > 0 && (
-                              <div className="text-sm text-gray-500">
-                                {contractor.contractorInfo.specializations.slice(0, 2).join(', ')}
-                                {contractor.contractorInfo.specializations.length > 2 && '...'}
-                              </div>
-                            )}
-                            {contractor.contractorInfo?.defaultProjectRate && (
-                              <div className="text-sm text-gray-500">
-                                ${contractor.contractorInfo.defaultProjectRate}/hr
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 font-medium">
-                            {Math.round(contractor.stats.monthlyHours)}h
-                          </div>
+          {contractors.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No contractors found</p>
+              <button
+                onClick={() => setShowInviteForm(true)}
+                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              >
+                Invite Your First Contractor
+              </button>
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-200">
+              {contractors.map((contractor) => (
+                <li key={contractor.id}>
+                  <div className="px-4 py-4 sm:px-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{contractor.name}</p>
+                          <p className="text-sm text-gray-500">{contractor.email}</p>
+                        </div>
+                        <div className="ml-6">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            StatusColors[contractor.registrationStatus]
+                          }`}>
+                            {StatusLabels[contractor.registrationStatus]}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        {contractor.autoClockingEnabled && contractor.processingMode && (
                           <div className="text-sm text-gray-500">
-                            {contractor.stats.activeProjects} projects
+                            <span className="font-medium">Auto-Clocking:</span>{' '}
+                            {AutoClockingModeLabels[contractor.processingMode]}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {contractor.stats.pendingApprovals > 0 ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              {contractor.stats.pendingApprovals} pending
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Up to date
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatLastActivity(contractor.stats.lastActivity)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                        )}
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-500">Auto-Clock:</span>
                           <button
-                            onClick={() => setSelectedContractor(
-                              selectedContractor === contractor._id ? null : contractor._id
-                            )}
-                            className="text-blue-600 hover:text-blue-900"
+                            onClick={() => toggleAutoClocking(contractor.id, !contractor.autoClockingEnabled)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full ${
+                              contractor.autoClockingEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                            }`}
                           >
-                            {selectedContractor === contractor._id ? 'Hide' : 'View'}
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                                contractor.autoClockingEnabled ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
                           </button>
-                          <button
-                            onClick={() => handleDownloadTimesheet(contractor._id, contractor.name)}
-                            className="text-green-600 hover:text-green-900 ml-3"
-                          >
-                            Download
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-500">
+                      <div>
+                        <span className="font-medium">Agency:</span>{' '}
+                        {contractor.contractingAgency || 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-medium">Department:</span>{' '}
+                        {contractor.department || 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-medium">Manager:</span>{' '}
+                        {contractor.manager?.name || 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'pending' && (
+        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          {pendingApprovals.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No pending approvals</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-200">
+              {pendingApprovals.map((contractor) => (
+                <li key={contractor.id}>
+                  <div className="px-4 py-4 sm:px-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{contractor.name}</p>
+                        <p className="text-sm text-gray-500">{contractor.email}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Setup completed: {new Date(contractor.setupCompletedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => {
+                            const reason = prompt('Rejection reason (optional):');
+                            if (reason !== null) {
+                              handleApproveContractor(contractor.id, false, reason);
+                            }
+                          }}
+                          className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => handleApproveContractor(contractor.id, true)}
+                          className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                        >
+                          Approve
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-500">
+                      <div>
+                        <span className="font-medium">Agency:</span>{' '}
+                        {contractor.contractingAgency || 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-medium">Auto-Clocking Mode:</span>{' '}
+                        {contractor.autoClockingSettings?.processingMode ? 
+                          AutoClockingModeLabels[contractor.autoClockingSettings.processingMode] : 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {/* Invite Contractor Modal */}
+      {showInviteForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Invite Contractor</h3>
+              <form onSubmit={handleInviteContractor} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={inviteForm.name}
+                    onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={inviteForm.email}
+                    onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Contracting Agency</label>
+                  <input
+                    type="text"
+                    value={inviteForm.contractingAgency}
+                    onChange={(e) => setInviteForm({ ...inviteForm, contractingAgency: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Department</label>
+                  <input
+                    type="text"
+                    value={inviteForm.department}
+                    onChange={(e) => setInviteForm({ ...inviteForm, department: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Hourly Rate ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={inviteForm.hourlyRate}
+                    onChange={(e) => setInviteForm({ ...inviteForm, hourlyRate: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end space-x-4 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowInviteForm(false)}
+                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {loading ? 'Sending...' : 'Send Invitation'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
-
-        {/* Help Text */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-blue-900 mb-2">How to Use This Dashboard</h3>
-          <ul className="text-sm text-blue-700 space-y-1">
-            <li>• <strong>View:</strong> Click "View" to see detailed timesheet information for a contractor</li>
-            <li>• <strong>Download:</strong> Click "Download" to get the current month's timesheet as a CSV file</li>
-            <li>• <strong>Filter:</strong> Use the dropdown to show only active or inactive contractors</li>
-            <li>• <strong>Search:</strong> Use the search box to find specific contractors by name, email, or business</li>
-            <li>• <strong>Approvals:</strong> Yellow badges indicate timesheets that need your review and approval</li>
-          </ul>
-        </div>
-      </div>
+      )}
     </div>
   );
-};
-
-export default ContractorManagementDashboard;
+}

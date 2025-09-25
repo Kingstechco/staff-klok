@@ -1,0 +1,222 @@
+
+> admin-web@0.1.0 dev
+> next dev
+
+   Using cached swc package @next/swc-wasm-nodejs...
+ ⚠ Attempted to load /mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/node_modules/next/next-swc-fallback/@next/swc-linux-x64-gnu/next-swc.linux-x64-gnu.node, but it was not installed
+ ⚠ Attempted to load /mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/node_modules/next/next-swc-fallback/@next/swc-linux-x64-musl/next-swc.linux-x64-musl.node, but it was not installed
+ ⚠ Attempted to load @next/swc-linux-x64-gnu, but it was not installed
+ ⚠ Attempted to load @next/swc-linux-x64-musl, but it was not installed
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/package-lock.json
+
+ ⚠ Attempted to load /mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/node_modules/next/next-swc-fallback/@next/swc-linux-x64-gnu/next-swc.linux-x64-gnu.node, but it was not installed
+ ⚠ Attempted to load /mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/node_modules/next/next-swc-fallback/@next/swc-linux-x64-musl/next-swc.linux-x64-musl.node, but it was not installed
+ ⚠ Attempted to load @next/swc-linux-x64-gnu, but it was not installed
+ ⚠ Attempted to load @next/swc-linux-x64-musl, but it was not installed
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3000
+   - Network:      http://10.255.255.254:3000
+
+ ✓ Starting...
+ ✓ Ready in 28.8s
+ ○ Compiling / ...
+ ✓ Compiled / in 24.6s (648 modules)
+ GET / 200 in 26952ms
+ ✓ Compiled in 2.3s (246 modules)
+ ✓ Compiled /favicon.ico in 385ms (410 modules)
+ GET /favicon.ico 200 in 987ms
+ ✓ Compiled /clockin in 412ms (649 modules)
+ GET /clockin 200 in 725ms
+ GET / 200 in 70ms
+ ○ Compiling /staff ...
+ ✓ Compiled /staff in 506ms (656 modules)
+ GET /staff 200 in 798ms
+ ✓ Compiled /reports in 433ms (665 modules)
+ GET /reports 200 in 696ms
+ ○ Compiling /schedule ...
+ ✓ Compiled /schedule in 563ms (655 modules)
+ GET /schedule 200 in 888ms
+ GET /clockin 200 in 108ms
+ GET /reports 200 in 71ms
+ GET /schedule 200 in 51ms
+ GET /reports 200 in 92ms
+ GET /clockin 200 in 97ms
+ GET /reports 200 in 55ms
+ GET / 200 in 112ms
+ GET /clockin 200 in 72ms
+   Reload env: .env.local
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled in 3.5s (678 modules)
+ GET /clockin 200 in 220ms
+ GET /clockin 200 in 1810ms
+ ✓ Compiled /favicon.ico in 325ms (431 modules)
+ GET /favicon.ico 200 in 429ms
+ ✓ Compiled /_not-found in 500ms (660 modules)
+ GET / 404 in 1041ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/app/page.js'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/app/page.js',
+  page: '/'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 1742ms (1000 modules)
+ GET / 500 in 4453ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/app-paths-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/app-paths-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/pages-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/pages-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/pages-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/pages-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'
+}
+ HEAD / 500 in 3309ms
+ HEAD / 500 in 65ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/app-paths-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/app-paths-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/pages-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/pages-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/pages-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/pages-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'
+}
+ GET / 500 in 828ms
+ GET / 500 in 120ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/app-paths-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/app-paths-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/pages-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/pages-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/pages-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/server/pages-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'] {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/routes-manifest.json'
+}
+ GET /clockin 500 in 903ms
+ GET /clockin 500 in 55ms
+[Error: ENOENT: no such file or directory, stat '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/cache/webpack/client-development/6.pack.gz'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'stat',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/cache/webpack/client-development/6.pack.gz'
+}
+ ⨯ unhandledRejection: [Error: ENOENT: no such file or directory, stat '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/cache/webpack/client-development/6.pack.gz'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'stat',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/cache/webpack/client-development/6.pack.gz'
+}
+ ⨯ unhandledRejection:  [Error: ENOENT: no such file or directory, stat '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/cache/webpack/client-development/6.pack.gz'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'stat',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/cache/webpack/client-development/6.pack.gz'
+}
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, stat '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/cache/webpack/client-development/6.pack.gz'
+[Error: ENOENT: no such file or directory, stat '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/cache/webpack/server-development/4.pack.gz'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'stat',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/cache/webpack/server-development/4.pack.gz'
+}
+ ⨯ unhandledRejection: [Error: ENOENT: no such file or directory, stat '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/cache/webpack/server-development/4.pack.gz'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'stat',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/cache/webpack/server-development/4.pack.gz'
+}
+ ⨯ unhandledRejection:  [Error: ENOENT: no such file or directory, stat '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/cache/webpack/server-development/4.pack.gz'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'stat',
+  path: '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/cache/webpack/server-development/4.pack.gz'
+}
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, stat '/mnt/c/Users/USER-PC/IdeaProjects/staff-clocking-app/admin-web/.next/cache/webpack/server-development/4.pack.gz'

@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Clocking App - E2E Test Suite</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .section { 
+            padding: 20px; 
+            border-bottom: 1px solid #eee; 
+        }
+        .section:last-child { border-bottom: none; }
+        .section h2 {
+            color: #2563eb;
+            margin-top: 0;
+        }
+        .form-group { 
+            margin-bottom: 15px; 
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: bold;
+        }
+        input, select, textarea, button { 
+            padding: 10px; 
+            border: 2px solid #ddd; 
+            border-radius: 6px; 
+            width: 100%;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #2563eb;
+            outline: none;
+        }
+        button { 
+            background-color: #2563eb; 
+            color: white; 
+            cursor: pointer; 
+            border: none;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        button:hover { 
+            background-color: #1d4ed8; 
+        }
+        button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        .button-group button {
+            flex: 1;
+        }
+        .result { 
+            margin-top: 20px; 
+            padding: 15px; 
+            border-radius: 6px; 
+            display: none;
+        }
+        .result.success {
+            background-color: #d1fae5;
+            border: 2px solid #10b981;
+            color: #047857;
+        }
+        .result.error {
+            background-color: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #dc2626;
+        }
+        .navigation {
+            background: #f8fafc;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .progress {
+            background: #e5e7eb;
+            height: 4px;
+            border-radius: 2px;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            background: #2563eb;
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .tenant-info {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #0ea5e9;
+        }
+        .time-entry {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #f59e0b;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-approved { background: #d1fae5; color: #047857; }
+        .status-clocked-in { background: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Staff Clocking App - E2E Test Suite</h1>
+            <p>Comprehensive End-to-End Testing Interface</p>
+        </div>
+
+        <div class="navigation">
+            <div class="nav-buttons">
+                <button id="prev-section" onclick="previousSection()" disabled>← Previous</button>
+                <span id="section-indicator">Section 1 of 6</span>
+                <button id="next-section" onclick="nextSection()">Next →</button>
+            </div>
+            <div class="progress">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+
+        <!-- Section 1: Tenant Signup -->
+        <div class="section" id="section-1">
+            <h2>1. Tenant Signup Flow</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="company-name">Company Name:</label>
+                    <input type="text" id="company-name" placeholder="Acme Construction" data-testid="company-name">
+                </div>
+                <div class="form-group">
+                    <label for="subdomain">Subdomain:</label>
+                    <input type="text" id="subdomain" placeholder="acme-construction" data-testid="subdomain">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="business-type">Business Type:</label>
+                    <select id="business-type" data-testid="business-type">
+                        <option value="">Select type...</option>
+                        <option value="contractors">Contractors</option>
+                        <option value="office">Office Workers</option>
+                        <option value="retail">Retail</option>
+                        <option value="healthcare">Healthcare</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="industry">Industry:</label>
+                    <input type="text" id="industry" placeholder="Construction, Healthcare, etc." data-testid="industry">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="admin-name">Admin Name:</label>
+                    <input type="text" id="admin-name" placeholder="John Smith" data-testid="admin-name">
+                </div>
+                <div class="form-group">
+                    <label for="admin-email">Admin Email:</label>
+                    <input type="email" id="admin-email" placeholder="john@acme.com" data-testid="admin-email">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="admin-pin">Admin PIN:</label>
+                    <input type="password" id="admin-pin" placeholder="1234" data-testid="admin-pin">
+                </div>
+                <div class="form-group">
+                    <label for="admin-phone">Phone:</label>
+                    <input type="tel" id="admin-phone" placeholder="+1 (555) 123-4567" data-testid="admin-phone">
+                </div>
+            </div>
+            <button onclick="createTenant()" data-testid="create-tenant-btn">Create Organization</button>
+            <div id="signup-result" class="result"></div>
+        </div>
+
+        <!-- Section 2: Staff Authentication -->
+        <div class="section" id="section-2" style="display: none;">
+            <h2>2. Staff Authentication Flow</h2>
+            <div class="tenant-info">
+                <strong>Current Tenant:</strong> <span id="current-tenant">Acme Construction</span><br>
+                <strong>Login URL:</strong> acme-construction.staffclock.com
+            </div>
+            <div class="form-group">
+                <label for="staff-pin">Enter your PIN:</label>
+                <input type="password" id="staff-pin" placeholder="Enter PIN" data-testid="staff-pin">
+            </div>
+            <div class="button-group">
+                <button onclick="authenticateStaff()" data-testid="login-btn">Clock In</button>
+                <button onclick="resetAuth()" data-testid="reset-btn">Reset</button>
+            </div>
+            <div id="auth-result" class="result"></div>
+        </div>
+
+        <!-- Section 3: Time Tracking -->
+        <div class="section" id="section-3" style="display: none;">
+            <h2>3. Time Tracking & Clocking</h2>
+            <div class="tenant-info">
+                <strong>Logged in as:</strong> <span id="logged-in-user">John Smith (Admin)</span><br>
+                <strong>Status:</strong> <span class="status-badge status-clocked-in">Clocked In</span>
+            </div>
+            <div class="form-group">
+                <label for="clock-action">Action:</label>
+                <select id="clock-action" data-testid="clock-action">
+                    <option value="clock-in">Clock In</option>
+                    <option value="clock-out">Clock Out</option>
+                    <option value="break-start">Start Break</option>
+                    <option value="break-end">End Break</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="project-code">Project Code (optional):</label>
+                <input type="text" id="project-code" placeholder="PRJ-2024-001" data-testid="project-code">
+            </div>
+            <div class="form-group">
+                <label for="notes">Notes (optional):</label>
+                <textarea id="notes" placeholder="Additional notes..." rows="3" data-testid="notes"></textarea>
+            </div>
+            <button onclick="recordTimeEntry()" data-testid="record-time-btn">Record Time Entry</button>
+            <div id="time-result" class="result"></div>
+            <div id="time-entries"></div>
+        </div>
+
+        <!-- Section 4: Staff Management -->
+        <div class="section" id="section-4" style="display: none;">
+            <h2>4. Staff Management (Admin)</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="new-staff-name">Staff Name:</label>
+                    <input type="text" id="new-staff-name" placeholder="Jane Doe" data-testid="new-staff-name">
+                </div>
+                <div class="form-group">
+                    <label for="new-staff-role">Role:</label>
+                    <select id="new-staff-role" data-testid="new-staff-role">
+                        <option value="staff">Staff</option>
+                        <option value="manager">Manager</option>
+                        <option value="contractor">Contractor</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="new-staff-email">Email:</label>
+                    <input type="email" id="new-staff-email" placeholder="jane@acme.com" data-testid="new-staff-email">
+                </div>
+                <div class="form-group">
+                    <label for="new-staff-pin">PIN:</label>
+                    <input type="password" id="new-staff-pin" placeholder="5678" data-testid="new-staff-pin">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="hourly-rate">Hourly Rate ($):</label>
+                    <input type="number" id="hourly-rate" placeholder="25.00" step="0.01" data-testid="hourly-rate">
+                </div>
+                <div class="form-group">
+                    <label for="department">Department:</label>
+                    <input type="text" id="department" placeholder="Construction" data-testid="department">
+                </div>
+            </div>
+            <button onclick="addStaffMember()" data-testid="add-staff-btn">Add Staff Member</button>
+            <div id="staff-result" class="result"></div>
+            <div id="staff-list"></div>
+        </div>
+
+        <!-- Section 5: Timesheet Approvals -->
+        <div class="section" id="section-5" style="display: none;">
+            <h2>5. Timesheet Approvals</h2>
+            <div class="form-group">
+                <label for="approval-period">Period:</label>
+                <select id="approval-period" data-testid="approval-period">
+                    <option value="current-week">Current Week</option>
+                    <option value="last-week">Last Week</option>
+                    <option value="current-month">Current Month</option>
+                </select>
+            </div>
+            <div id="pending-approvals">
+                <div class="time-entry">
+                    <strong>Jane Doe</strong> - Project: PRJ-2024-001<br>
+                    <strong>Hours:</strong> 8.5 | <strong>Date:</strong> 2024-01-15<br>
+                    <strong>Status:</strong> <span class="status-badge status-pending">Pending Approval</span>
+                    <div class="button-group" style="margin-top: 10px;">
+                        <button onclick="approveTimesheet('jane-001')" data-testid="approve-btn-jane-001">Approve</button>
+                        <button onclick="rejectTimesheet('jane-001')" data-testid="reject-btn-jane-001">Reject</button>
+                    </div>
+                </div>
+                <div class="time-entry">
+                    <strong>Mike Johnson</strong> - Project: PRJ-2024-002<br>
+                    <strong>Hours:</strong> 7.25 | <strong>Date:</strong> 2024-01-15<br>
+                    <strong>Status:</strong> <span class="status-badge status-pending">Pending Approval</span>
+                    <div class="button-group" style="margin-top: 10px;">
+                        <button onclick="approveTimesheet('mike-001')" data-testid="approve-btn-mike-001">Approve</button>
+                        <button onclick="rejectTimesheet('mike-001')" data-testid="reject-btn-mike-001">Reject</button>
+                    </div>
+                </div>
+            </div>
+            <div id="approval-result" class="result"></div>
+        </div>
+
+        <!-- Section 6: Reports & Analytics -->
+        <div class="section" id="section-6" style="display: none;">
+            <h2>6. Reports & Analytics</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="report-type">Report Type:</label>
+                    <select id="report-type" data-testid="report-type">
+                        <option value="timesheet">Timesheet Summary</option>
+                        <option value="attendance">Attendance Report</option>
+                        <option value="payroll">Payroll Export</option>
+                        <option value="project">Project Hours</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="date-range">Date Range:</label>
+                    <select id="date-range" data-testid="date-range">
+                        <option value="this-week">This Week</option>
+                        <option value="last-week">Last Week</option>
+                        <option value="this-month">This Month</option>
+                        <option value="last-month">Last Month</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="export-format">Export Format:</label>
+                    <select id="export-format" data-testid="export-format">
+                        <option value="pdf">PDF</option>
+                        <option value="excel">Excel</option>
+                        <option value="csv">CSV</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="include-details">Include Details:</label>
+                    <select id="include-details" data-testid="include-details">
+                        <option value="summary">Summary Only</option>
+                        <option value="detailed">Detailed Breakdown</option>
+                    </select>
+                </div>
+            </div>
+            <div class="button-group">
+                <button onclick="generateReport()" data-testid="generate-report-btn">Generate Report</button>
+                <button onclick="exportReport()" data-testid="export-report-btn">Export Report</button>
+            </div>
+            <div id="report-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentSection = 1;
+        const totalSections = 6;
+        let tenantData = {};
+        let timeEntries = [];
+        let staffMembers = [];
+
+        function updateProgress() {
+            const progress = (currentSection / totalSections) * 100;
+            document.getElementById('progress-bar').style.width = progress + '%';
+            document.getElementById('section-indicator').textContent = `Section ${currentSection} of ${totalSections}`;
+            
+            document.getElementById('prev-section').disabled = currentSection === 1;
+            document.getElementById('next-section').disabled = currentSection === totalSections;
+        }
+
+        function showSection(sectionNum) {
+            for (let i = 1; i <= totalSections; i++) {
+                document.getElementById(`section-${i}`).style.display = i === sectionNum ? 'block' : 'none';
+            }
+            updateProgress();
+        }
+
+        function nextSection() {
+            if (currentSection < totalSections) {
+                currentSection++;
+                showSection(currentSection);
+            }
+        }
+
+        function previousSection() {
+            if (currentSection > 1) {
+                currentSection--;
+                showSection(currentSection);
+            }
+        }
+
+        function showResult(elementId, message, type) {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function createTenant() {
+            const companyName = document.getElementById('company-name').value;
+            const subdomain = document.getElementById('subdomain').value;
+            const businessType = document.getElementById('business-type').value;
+            const industry = document.getElementById('industry').value;
+            const adminName = document.getElementById('admin-name').value;
+            const adminEmail = document.getElementById('admin-email').value;
+            const adminPin = document.getElementById('admin-pin').value;
+
+            if (!companyName || !subdomain || !businessType || !adminName || !adminEmail || !adminPin) {
+                showResult('signup-result', 'Please fill in all required fields!', 'error');
+                return;
+            }
+
+            tenantData = { companyName, subdomain, businessType, industry, adminName, adminEmail, adminPin };
+            document.getElementById('current-tenant').textContent = companyName;
+            document.getElementById('logged-in-user').textContent = `${adminName} (Admin)`;
+            
+            showResult('signup-result', `✅ Organization "${companyName}" created successfully! Admin PIN: ${adminPin}`, 'success');
+        }
+
+        function authenticateStaff() {
+            const pin = document.getElementById('staff-pin').value;
+            if (!pin) {
+                showResult('auth-result', 'Please enter your PIN!', 'error');
+                return;
+            }
+
+            if (pin === tenantData.adminPin) {
+                showResult('auth-result', `✅ Welcome back, ${tenantData.adminName}! You are now clocked in.`, 'success');
+            } else {
+                showResult('auth-result', '❌ Invalid PIN. Please try again.', 'error');
+            }
+        }
+
+        function resetAuth() {
+            document.getElementById('staff-pin').value = '';
+            showResult('auth-result', '🔄 Authentication form reset.', 'success');
+        }
+
+        function recordTimeEntry() {
+            const action = document.getElementById('clock-action').value;
+            const projectCode = document.getElementById('project-code').value;
+            const notes = document.getElementById('notes').value;
+            
+            const entry = {
+                id: Date.now(),
+                action: action.replace('-', ' ').toUpperCase(),
+                projectCode: projectCode || 'N/A',
+                notes: notes || 'N/A',
+                timestamp: new Date().toLocaleString()
+            };
+            
+            timeEntries.push(entry);
+            
+            const entriesDiv = document.getElementById('time-entries');
+            entriesDiv.innerHTML = '<h3>Recent Time Entries:</h3>' + 
+                timeEntries.slice(-3).map(entry => `
+                    <div class="time-entry">
+                        <strong>${entry.action}</strong> | Project: ${entry.projectCode}<br>
+                        <strong>Time:</strong> ${entry.timestamp}<br>
+                        <strong>Notes:</strong> ${entry.notes}
+                    </div>
+                `).join('');
+            
+            showResult('time-result', `✅ ${entry.action} recorded successfully at ${entry.timestamp}`, 'success');
+        }
+
+        function addStaffMember() {
+            const name = document.getElementById('new-staff-name').value;
+            const role = document.getElementById('new-staff-role').value;
+            const email = document.getElementById('new-staff-email').value;
+            const pin = document.getElementById('new-staff-pin').value;
+            const rate = document.getElementById('hourly-rate').value;
+            const department = document.getElementById('department').value;
+
+            if (!name || !role || !email || !pin) {
+                showResult('staff-result', 'Please fill in all required fields!', 'error');
+                return;
+            }
+
+            const staff = { id: Date.now(), name, role, email, pin, rate: rate || '0.00', department: department || 'General' };
+            staffMembers.push(staff);
+
+            const staffDiv = document.getElementById('staff-list');
+            staffDiv.innerHTML = '<h3>Staff Members:</h3>' + 
+                staffMembers.map(member => `
+                    <div class="time-entry">
+                        <strong>${member.name}</strong> (${member.role})<br>
+                        <strong>Email:</strong> ${member.email} | <strong>PIN:</strong> ****<br>
+                        <strong>Rate:</strong> $${member.rate}/hr | <strong>Department:</strong> ${member.department}
+                    </div>
+                `).join('');
+
+            showResult('staff-result', `✅ Staff member "${name}" added successfully!`, 'success');
+            
+            // Clear form
+            document.getElementById('new-staff-name').value = '';
+            document.getElementById('new-staff-email').value = '';
+            document.getElementById('new-staff-pin').value = '';
+            document.getElementById('hourly-rate').value = '';
+            document.getElementById('department').value = '';
+        }
+
+        function approveTimesheet(id) {
+            const entry = document.querySelector(`[data-testid="approve-btn-${id}"]`).parentElement.parentElement;
+            entry.querySelector('.status-badge').className = 'status-badge status-approved';
+            entry.querySelector('.status-badge').textContent = 'Approved';
+            entry.querySelector('.button-group').style.display = 'none';
+            
+            showResult('approval-result', '✅ Timesheet approved successfully!', 'success');
+        }
+
+        function rejectTimesheet(id) {
+            const entry = document.querySelector(`[data-testid="reject-btn-${id}"]`).parentElement.parentElement;
+            entry.style.display = 'none';
+            
+            showResult('approval-result', '❌ Timesheet rejected and returned to employee.', 'error');
+        }
+
+        function generateReport() {
+            const reportType = document.getElementById('report-type').value;
+            const dateRange = document.getElementById('date-range').value;
+            const format = document.getElementById('export-format').value;
+            
+            showResult('report-result', 
+                `✅ ${reportType.replace('-', ' ').toUpperCase()} report generated for ${dateRange.replace('-', ' ')} in ${format.toUpperCase()} format!`, 
+                'success'
+            );
+        }
+
+        function exportReport() {
+            const format = document.getElementById('export-format').value;
+            showResult('report-result', `📊 Report exported in ${format.toUpperCase()} format! Check your downloads folder.`, 'success');
+        }
+
+        // Auto-populate subdomain from company name
+        document.getElementById('company-name').addEventListener('input', function(e) {
+            const subdomain = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+            document.getElementById('subdomain').value = subdomain;
+        });
+
+        // Initialize
+        updateProgress();
+    </script>
+</body>
+</html>

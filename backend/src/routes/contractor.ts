@@ -5,12 +5,266 @@ import { authenticate, authorize } from '../middleware/auth';
 import { resolveTenant, requireFeature, checkSubscriptionLimits } from '../middleware/tenantResolver';
 import { handleValidationErrors } from '../middleware/validation';
 import { auditLog } from '../middleware/auditLogger';
+import autoClockingService from '../services/autoClockingService';
 
 const router = Router();
 
-// Apply tenant resolution and authentication to all routes
+// Apply tenant resolution to all routes
 router.use(resolveTenant);
-router.use(authenticate);
+
+// Contractor Registration & Setup Routes (No auth required for setup completion)
+
+/**
+ * POST /api/contractor/invite
+ * Admin invites a contractor to join
+ */
+router.post('/invite', [
+  authenticate,
+  authorize(['admin', 'manager']),
+  body('name').trim().isLength({ min: 1, max: 100 }),
+  body('email').isEmail().normalizeEmail(),
+  body('contractingAgency').optional().trim().isLength({ max: 100 }),
+  body('department').optional().trim().isLength({ max: 50 }),
+  body('manager').optional().isMongoId(),
+  body('hourlyRate').optional().isFloat({ min: 0 }),
+  body('startDate').optional().isISO8601(),
+  body('defaultSchedule.startTime').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+  body('defaultSchedule.endTime').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+  body('defaultSchedule.workDays').optional().isArray(),
+  body('defaultSchedule.hoursPerDay').optional().isInt({ min: 1, max: 24 }),
+  handleValidationErrors,
+  auditLog({
+    action: 'contractor_invited',
+    resource: 'contractor',
+    severity: 'medium'
+  })
+], ContractorController.inviteContractor);
+
+/**
+ * POST /api/contractor/setup/:token
+ * Contractor completes their setup
+ */
+router.post('/setup/:token', [
+  param('token').isJWT(),
+  body('pin').isLength({ min: 4, max: 6 }).isNumeric(),
+  body('preferences').optional().isObject(),
+  body('autoClockingSettings.enabled').optional().isBoolean(),
+  body('autoClockingSettings.processingMode').optional().isIn(['proactive', 'reactive', 'weekly_batch']),
+  body('workSchedule.startTime').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+  body('workSchedule.endTime').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+  body('workSchedule.workDays').optional().isArray(),
+  body('workSchedule.hoursPerDay').optional().isInt({ min: 1, max: 24 }),
+  body('timezone').optional().trim(),
+  handleValidationErrors
+], ContractorController.completeSetup);
+
+/**
+ * GET /api/contractor/pending-approvals
+ * Get contractors waiting for admin approval
+ */
+router.get('/pending-approvals', [
+  authenticate,
+  authorize(['admin']),
+  auditLog({
+    action: 'pending_approvals_viewed',
+    resource: 'contractor',
+    severity: 'low'
+  })
+], ContractorController.getPendingApprovals);
+
+/**
+ * POST /api/contractor/:contractorId/approve
+ * Approve or reject contractor registration
+ */
+router.post('/:contractorId/approve', [
+  authenticate,
+  authorize(['admin']),
+  param('contractorId').isMongoId(),
+  body('approved').isBoolean(),
+  body('overrideSettings').optional().isObject(),
+  body('rejectionReason').optional().trim().isLength({ max: 500 }),
+  handleValidationErrors,
+  auditLog({
+    action: 'contractor_approval_decision',
+    resource: 'contractor',
+    severity: 'high'
+  })
+], ContractorController.approveContractor);
+
+// Contractor Settings & Management Routes
+
+/**
+ * GET /api/contractor/settings
+ * Get current contractor's settings
+ */
+router.get('/settings', [
+  authenticate,
+  authorize(['contractor'])
+], ContractorController.getContractorSettings);
+
+/**
+ * PUT /api/contractor/settings
+ * Update contractor auto-clocking settings
+ */
+router.put('/settings', [
+  authenticate,
+  authorize(['contractor']),
+  body('autoClockingSettings').isObject(),
+  body('autoClockingSettings.enabled').optional().isBoolean(),
+  body('autoClockingSettings.processingMode').optional().isIn(['proactive', 'reactive', 'weekly_batch']),
+  handleValidationErrors,
+  auditLog({
+    action: 'contractor_settings_updated',
+    resource: 'contractor',
+    severity: 'medium'
+  })
+], ContractorController.updateAutoClockingSettings);
+
+// Exception Management Routes
+
+/**
+ * POST /api/contractor/exceptions
+ * Report an exception (sick day, etc.)
+ */
+router.post('/exceptions', [
+  authenticate,
+  authorize(['contractor']),
+  body('date').isISO8601(),
+  body('endDate').optional().isISO8601(),
+  body('type').isIn(['sick', 'vacation', 'holiday', 'unpaid_leave', 'personal', 'bereavement', 'jury_duty', 'custom']),
+  body('reason').optional().trim().isLength({ max: 500 }),
+  body('description').optional().trim().isLength({ max: 1000 }),
+  body('isFullDay').isBoolean(),
+  body('hoursAffected').optional().isFloat({ min: 0, max: 24 }),
+  body('startTime').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+  body('endTime').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+  handleValidationErrors,
+  auditLog({
+    action: 'exception_reported',
+    resource: 'contractor_exception',
+    severity: 'medium'
+  })
+], ContractorController.reportException);
+
+/**
+ * GET /api/contractor/exceptions
+ * Get contractor's exceptions
+ */
+router.get('/exceptions', [
+  authenticate,
+  authorize(['contractor', 'admin', 'manager']),
+  query('startDate').optional().isISO8601(),
+  query('endDate').optional().isISO8601(),
+  query('status').optional().isIn(['pending', 'approved', 'rejected', 'auto_approved']),
+  handleValidationErrors
+], ContractorController.getExceptions);
+
+// Auto-clocking Management Routes
+
+/**
+ * POST /api/contractor/:contractorId/auto-clock/trigger
+ * Manually trigger auto-clocking for a contractor
+ */
+router.post('/:contractorId/auto-clock/trigger', [
+  authenticate,
+  authorize(['admin', 'manager']),
+  param('contractorId').isMongoId(),
+  body('date').optional().isISO8601(),
+  handleValidationErrors,
+  auditLog({
+    action: 'auto_clocking_triggered',
+    resource: 'contractor',
+    severity: 'medium'
+  })
+], async (req: any, res: any) => {
+  try {
+    const { contractorId } = req.params;
+    const { date } = req.body;
+    
+    const result = await autoClockingService.processSpecificContractor(
+      contractorId, 
+      date ? new Date(date) : undefined
+    );
+    
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to trigger auto-clocking' });
+  }
+});
+
+/**
+ * POST /api/contractor/:contractorId/auto-clock/regenerate
+ * Regenerate auto entries for a date range
+ */
+router.post('/:contractorId/auto-clock/regenerate', [
+  authenticate,
+  authorize(['admin', 'manager']),
+  param('contractorId').isMongoId(),
+  body('startDate').isISO8601(),
+  body('endDate').isISO8601(),
+  handleValidationErrors,
+  auditLog({
+    action: 'auto_entries_regenerated',
+    resource: 'contractor',
+    severity: 'high'
+  })
+], async (req: any, res: any) => {
+  try {
+    const { contractorId } = req.params;
+    const { startDate, endDate } = req.body;
+    
+    const result = await autoClockingService.regenerateEntries(
+      contractorId,
+      new Date(startDate),
+      new Date(endDate)
+    );
+    
+    res.json({
+      message: 'Entries regenerated successfully',
+      processed: result.processed,
+      skipped: result.skipped
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to regenerate entries' });
+  }
+});
+
+/**
+ * GET /api/contractor/auto-clock/statistics
+ * Get auto-clocking system statistics
+ */
+router.get('/auto-clock/statistics', [
+  authenticate,
+  authorize(['admin', 'manager']),
+  auditLog({
+    action: 'auto_clocking_stats_viewed',
+    resource: 'system',
+    severity: 'low'
+  })
+], async (req: any, res: any) => {
+  try {
+    const stats = await autoClockingService.getStatistics(req.user.tenantId);
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch statistics' });
+  }
+});
+
+/**
+ * GET /api/contractor/auto-clock/health
+ * Check auto-clocking service health
+ */
+router.get('/auto-clock/health', [
+  authenticate,
+  authorize(['admin']),
+], async (req: any, res: any) => {
+  try {
+    const health = autoClockingService.getHealthStatus();
+    res.json(health);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to check service health' });
+  }
+});
 
 /**
  * GET /api/contractor/dashboard
@@ -18,6 +272,7 @@ router.use(authenticate);
  * Admin/Manager only - requires contractor management feature
  */
 router.get('/dashboard', [
+  authenticate,
   authorize(['admin', 'manager']),
   requireFeature('contractor_management'),
   auditLog({

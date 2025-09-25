@@ -308,22 +308,155 @@ Health check endpoint (no auth required)
 
 ---
 
+## Contractor Management
+
+### POST /contractor/invite
+Invite a contractor to join (Admin/Manager only)
+```json
+{
+  "name": "John Contractor",
+  "email": "john@contractor.com",
+  "contractingAgency": "TechStaff Solutions",
+  "department": "Development",
+  "manager": "manager_id",
+  "hourlyRate": 75.00,
+  "startDate": "2024-02-01",
+  "defaultSchedule": {
+    "startTime": "09:00",
+    "endTime": "17:00",
+    "workDays": [1, 2, 3, 4, 5],
+    "hoursPerDay": 8,
+    "timezone": "America/New_York"
+  }
+}
+```
+
+### POST /contractor/setup/:token
+Complete contractor setup (no auth required)
+```json
+{
+  "pin": "4567",
+  "timezone": "America/New_York",
+  "preferences": {
+    "notifications": {
+      "email": true,
+      "clockInReminder": false,
+      "timesheetReminder": true,
+      "approvalNotification": true
+    }
+  },
+  "autoClockingSettings": {
+    "enabled": true,
+    "processingMode": "reactive",
+    "requiresApproval": false,
+    "exceptionNotificationMethod": "email"
+  },
+  "workSchedule": {
+    "startTime": "09:00",
+    "endTime": "17:00",
+    "workDays": [1, 2, 3, 4, 5],
+    "hoursPerDay": 8
+  }
+}
+```
+
+### GET /contractor/pending-approvals
+Get contractors awaiting approval (Admin only)
+
+### POST /contractor/:contractorId/approve
+Approve or reject contractor registration (Admin only)
+```json
+{
+  "approved": true,
+  "overrideSettings": {
+    "processingMode": "proactive"
+  },
+  "rejectionReason": "Optional rejection reason"
+}
+```
+
+### GET /contractor/settings
+Get current contractor's auto-clocking settings (Contractor only)
+
+### PUT /contractor/settings
+Update contractor auto-clocking settings (Contractor only)
+```json
+{
+  "autoClockingSettings": {
+    "enabled": true,
+    "processingMode": "weekly_batch",
+    "requiresApproval": true
+  }
+}
+```
+
+### POST /contractor/exceptions
+Report an exception (sick day, vacation, etc.) - Contractor only
+```json
+{
+  "date": "2024-01-20",
+  "endDate": "2024-01-21",
+  "type": "sick",
+  "reason": "Flu symptoms",
+  "description": "Unable to work due to illness",
+  "isFullDay": true,
+  "hoursAffected": 8
+}
+```
+
+### GET /contractor/exceptions
+Get contractor's exceptions
+- Query params: `startDate`, `endDate`, `status`
+
+### POST /contractor/:contractorId/auto-clock/trigger
+Manually trigger auto-clocking for a contractor (Admin/Manager only)
+```json
+{
+  "date": "2024-01-20"
+}
+```
+
+### POST /contractor/:contractorId/auto-clock/regenerate
+Regenerate auto entries for a date range (Admin/Manager only)
+```json
+{
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31"
+}
+```
+
+### GET /contractor/auto-clock/statistics
+Get auto-clocking system statistics (Admin/Manager only)
+
+### GET /contractor/auto-clock/health
+Check auto-clocking service health (Admin only)
+
+### GET /contractor/contractors
+Get all contractors in the tenant (Admin/Manager only)
+- Query params: `status`, `department`, `agency`
+
+---
+
 ## Role-Based Access Control
 
 ### Roles
 - **admin**: Full system access
 - **manager**: Staff and schedule management, reports
 - **staff**: Personal time tracking only
+- **contractor**: Auto-time tracking, exception reporting, limited self-management
 
 ### Permission Matrix
-| Endpoint | Admin | Manager | Staff |
-|----------|-------|---------|-------|
-| User CRUD | ✅ | ✅ | ❌ |
-| All Time Entries | ✅ | ✅ | Own Only |
-| Schedule Management | ✅ | ✅ | View Only |
-| Analytics | ✅ | ✅ | ❌ |
-| Exports | ✅ | ✅ | ❌ |
-| System Backup | ✅ | ❌ | ❌ |
+| Endpoint | Admin | Manager | Staff | Contractor |
+|----------|-------|---------|-------|-----------|
+| User CRUD | ✅ | ✅ | ❌ | ❌ |
+| All Time Entries | ✅ | ✅ | Own Only | Own Only |
+| Schedule Management | ✅ | ✅ | View Only | View Only |
+| Analytics | ✅ | ✅ | ❌ | ❌ |
+| Exports | ✅ | ✅ | ❌ | ❌ |
+| System Backup | ✅ | ❌ | ❌ | ❌ |
+| Contractor Management | ✅ | ✅ | ❌ | ❌ |
+| Auto-Clocking Controls | ✅ | ✅ | ❌ | Own Only |
+| Exception Reporting | ✅ | ✅ | ❌ | Own Only |
 
 ---
 
@@ -341,12 +474,27 @@ Health check endpoint (no auth required)
   "id": "string",
   "name": "string",
   "email": "string",
-  "role": "admin|manager|staff",
+  "role": "admin|manager|staff|contractor",
   "department": "string",
   "position": "string",
   "hourlyRate": "number",
   "overtimeRate": "number",
   "isActive": "boolean",
+  "contractorInfo": {
+    "contractingAgency": "string",
+    "autoClocking": {
+      "enabled": "boolean",
+      "processingMode": "proactive|reactive|weekly_batch",
+      "workSchedule": {
+        "startTime": "string",
+        "endTime": "string",
+        "workDays": "number[]",
+        "hoursPerDay": "number"
+      },
+      "requiresApproval": "boolean"
+    },
+    "registrationStatus": "invited|setup_pending|setup_completed|active|inactive"
+  },
   "createdAt": "date",
   "updatedAt": "date"
 }
@@ -364,8 +512,29 @@ Health check endpoint (no auth required)
   "overtimeHours": "number",
   "status": "active|completed|cancelled",
   "isApproved": "boolean",
+  "isAutoGenerated": "boolean",
+  "autoGeneratedAt": "date",
   "location": "object",
   "notes": "string"
+}
+```
+
+### Contractor Exception
+```json
+{
+  "id": "string",
+  "userId": "string",
+  "date": "date",
+  "endDate": "date",
+  "type": "sick|vacation|holiday|unpaid_leave|personal|bereavement|jury_duty|custom",
+  "status": "pending|approved|rejected|auto_approved",
+  "reason": "string",
+  "isFullDay": "boolean",
+  "hoursAffected": "number",
+  "createdBy": "string",
+  "approvedBy": "string",
+  "autoApproved": "boolean",
+  "createdAt": "date"
 }
 ```
 

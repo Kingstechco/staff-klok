@@ -26,8 +26,52 @@ export interface IUser extends Document {
   
   // Employment Details
   employmentType: EmploymentType;
+  employmentTypeId?: mongoose.Types.ObjectId; // Reference to EmploymentType document
+  employmentStatus: 'active' | 'inactive' | 'on_leave' | 'terminated' | 'suspended';
   hireDate?: Date;
   terminationDate?: Date;
+  probationEndDate?: Date;
+  
+  // HR Compliance Fields
+  workSchedule?: {
+    standardHoursPerWeek: number;
+    workDays: number[]; // 0-6, Sunday = 0
+    startTime?: string; // '09:00'
+    endTime?: string; // '17:00'
+    timezone?: string;
+    flexibleScheduling: boolean;
+    remoteWorkDays?: number[]; // Days allowed to work remotely
+  };
+  
+  // Leave and Benefits
+  leaveBalances?: {
+    annualLeave: { available: number; used: number; };
+    sickLeave: { available: number; used: number; };
+    personalLeave: { available: number; used: number; };
+    parentalLeave?: { available: number; used: number; };
+    studyLeave?: { available: number; used: number; };
+    lastUpdated: Date;
+  };
+  
+  // Compliance and Certifications
+  compliance?: {
+    backgroundCheckCompleted: boolean;
+    backgroundCheckDate?: Date;
+    drugTestCompleted: boolean;
+    drugTestDate?: Date;
+    mandatoryTrainingCompleted: string[]; // Array of completed training IDs
+    certifications: {
+      name: string;
+      issuedDate: Date;
+      expirationDate?: Date;
+      certifyingBody: string;
+    }[];
+    workEligibility: {
+      verified: boolean;
+      documentType?: string;
+      expirationDate?: Date;
+    };
+  };
   
   // Compensation
   hourlyRate?: number;
@@ -44,6 +88,42 @@ export interface IUser extends Document {
     clients: mongoose.Types.ObjectId[];
     specializations: string[];
     availableHours?: number;
+    contractingAgency?: string;
+    
+    // Auto-clocking settings
+    autoClocking?: {
+      enabled: boolean;
+      processingMode: 'proactive' | 'reactive' | 'weekly_batch';
+      workSchedule: {
+        startTime: string; // "09:00"
+        endTime: string;   // "17:00"
+        workDays: number[]; // [1,2,3,4,5] (Mon-Fri)
+        hoursPerDay: number; // 8
+        timezone?: string;
+      };
+      customSettings: {
+        proactive?: {
+          generateTime: string; // "00:00"
+          allowSameDayExceptions: boolean;
+        };
+        reactive?: {
+          cutoffTime: string; // "18:00"
+          graceMinutes: number; // 30
+        };
+        weekly_batch?: {
+          processDay: 'friday' | 'sunday';
+          weekDefinition: 'monday_start' | 'sunday_start';
+        };
+      };
+      requiresApproval: boolean;
+      exceptionNotificationMethod: 'email' | 'sms' | 'app';
+    };
+    
+    // Registration status
+    registrationStatus: 'invited' | 'setup_pending' | 'setup_completed' | 'active' | 'inactive';
+    setupToken?: string;
+    setupTokenExpires?: Date;
+    setupCompletedAt?: Date;
   };
   
   // Client Contact Information (for contractor approval)
@@ -178,11 +258,80 @@ const UserSchema: Schema = new Schema({
     enum: ['full_time', 'part_time', 'contractor', 'intern'],
     default: 'full_time'
   },
+  employmentTypeId: {
+    type: Schema.Types.ObjectId,
+    ref: 'EmploymentType'
+  },
+  employmentStatus: {
+    type: String,
+    enum: ['active', 'inactive', 'on_leave', 'terminated', 'suspended'],
+    default: 'active',
+    index: true
+  },
   hireDate: {
     type: Date
   },
   terminationDate: {
     type: Date
+  },
+  probationEndDate: {
+    type: Date
+  },
+  
+  // HR Compliance Fields
+  workSchedule: {
+    standardHoursPerWeek: { type: Number, min: 1, max: 80 },
+    workDays: [{ type: Number, min: 0, max: 6 }], // 0=Sunday, 6=Saturday
+    startTime: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+    endTime: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+    timezone: { type: String, trim: true },
+    flexibleScheduling: { type: Boolean, default: false },
+    remoteWorkDays: [{ type: Number, min: 0, max: 6 }]
+  },
+  
+  // Leave and Benefits
+  leaveBalances: {
+    annualLeave: {
+      available: { type: Number, min: 0, default: 0 },
+      used: { type: Number, min: 0, default: 0 }
+    },
+    sickLeave: {
+      available: { type: Number, min: 0, default: 0 },
+      used: { type: Number, min: 0, default: 0 }
+    },
+    personalLeave: {
+      available: { type: Number, min: 0, default: 0 },
+      used: { type: Number, min: 0, default: 0 }
+    },
+    parentalLeave: {
+      available: { type: Number, min: 0, default: 0 },
+      used: { type: Number, min: 0, default: 0 }
+    },
+    studyLeave: {
+      available: { type: Number, min: 0, default: 0 },
+      used: { type: Number, min: 0, default: 0 }
+    },
+    lastUpdated: { type: Date, default: Date.now }
+  },
+  
+  // Compliance and Certifications
+  compliance: {
+    backgroundCheckCompleted: { type: Boolean, default: false },
+    backgroundCheckDate: { type: Date },
+    drugTestCompleted: { type: Boolean, default: false },
+    drugTestDate: { type: Date },
+    mandatoryTrainingCompleted: [{ type: String, trim: true }],
+    certifications: [{
+      name: { type: String, required: true, trim: true },
+      issuedDate: { type: Date, required: true },
+      expirationDate: { type: Date },
+      certifyingBody: { type: String, required: true, trim: true }
+    }],
+    workEligibility: {
+      verified: { type: Boolean, default: false },
+      documentType: { type: String, trim: true },
+      expirationDate: { type: Date }
+    }
   },
   
   // Compensation
@@ -231,6 +380,121 @@ const UserSchema: Schema = new Schema({
       type: Number,
       min: 1,
       max: 168 // Max hours in a week
+    },
+    contractingAgency: {
+      type: String,
+      trim: true
+    },
+    
+    // Auto-clocking settings
+    autoClocking: {
+      enabled: {
+        type: Boolean,
+        default: false
+      },
+      processingMode: {
+        type: String,
+        enum: ['proactive', 'reactive', 'weekly_batch'],
+        default: 'reactive'
+      },
+      workSchedule: {
+        startTime: {
+          type: String,
+          default: '09:00',
+          match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+        },
+        endTime: {
+          type: String,
+          default: '17:00',
+          match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+        },
+        workDays: {
+          type: [Number],
+          default: [1, 2, 3, 4, 5], // Monday to Friday
+          validate: {
+            validator: function(days: number[]) {
+              return days.every(day => day >= 0 && day <= 6) && days.length <= 7;
+            },
+            message: 'Work days must be valid day numbers (0-6) and unique'
+          }
+        },
+        hoursPerDay: {
+          type: Number,
+          default: 8,
+          min: 1,
+          max: 24
+        },
+        timezone: {
+          type: String,
+          default: 'America/New_York'
+        }
+      },
+      customSettings: {
+        proactive: {
+          generateTime: {
+            type: String,
+            default: '00:00',
+            match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+          },
+          allowSameDayExceptions: {
+            type: Boolean,
+            default: true
+          }
+        },
+        reactive: {
+          cutoffTime: {
+            type: String,
+            default: '18:00',
+            match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+          },
+          graceMinutes: {
+            type: Number,
+            default: 30,
+            min: 0,
+            max: 240
+          }
+        },
+        weekly_batch: {
+          processDay: {
+            type: String,
+            enum: ['friday', 'sunday'],
+            default: 'friday'
+          },
+          weekDefinition: {
+            type: String,
+            enum: ['monday_start', 'sunday_start'],
+            default: 'monday_start'
+          }
+        }
+      },
+      requiresApproval: {
+        type: Boolean,
+        default: false
+      },
+      exceptionNotificationMethod: {
+        type: String,
+        enum: ['email', 'sms', 'app'],
+        default: 'email'
+      }
+    },
+    
+    // Registration status
+    registrationStatus: {
+      type: String,
+      enum: ['invited', 'setup_pending', 'setup_completed', 'active', 'inactive'],
+      default: 'invited'
+    },
+    setupToken: {
+      type: String,
+      sparse: true
+    },
+    setupTokenExpires: {
+      type: Date,
+      sparse: true
+    },
+    setupCompletedAt: {
+      type: Date,
+      sparse: true
     }
   },
   

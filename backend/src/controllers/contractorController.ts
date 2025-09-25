@@ -1,14 +1,526 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import { AuthRequest } from '../middleware/auth';
 import { TenantRequest } from '../middleware/tenantResolver';
 import User from '../models/User';
 import Project from '../models/Project';
 import TimeEntry from '../models/TimeEntry';
+import ContractorException from '../models/ContractorException';
 import logger from '../utils/logger';
 import { startOfMonth, endOfMonth, format, parseISO } from 'date-fns';
 
+// Mock email service - replace with actual implementation
+const sendEmail = async (options: any) => {
+  console.log('Sending email:', options);
+  return Promise.resolve();
+};
+
 export class ContractorController {
   
+  // Create contractor invitation
+  static async inviteContractor(req: AuthRequest, res: Response) {
+    try {
+      const {
+        name,
+        email,
+        contractingAgency,
+        department,
+        manager,
+        hourlyRate,
+        startDate,
+        defaultSchedule
+      } = req.body;
+
+      // Check if user already exists
+      const existingUser = await User.findOne({
+        tenantId: req.user.tenantId,
+        email,
+        isActive: true
+      });
+
+      if (existingUser) {
+        return res.status(400).json({ error: 'User with this email already exists' });
+      }
+
+      // Generate setup token
+      const setupToken = jwt.sign(
+        { 
+          tenantId: req.user.tenantId,
+          email,
+          action: 'contractor_setup'
+        },
+        process.env.JWT_SECRET!,
+        { expiresIn: '7d' }
+      );
+
+      // Create contractor profile
+      const contractor = new User({
+        tenantId: req.user.tenantId,
+        name,
+        email,
+        role: 'contractor',
+        employmentType: 'contractor',
+        department,
+        manager,
+        hourlyRate,
+        hireDate: startDate ? new Date(startDate) : new Date(),
+        pin: Math.floor(1000 + Math.random() * 9000).toString(), // Temporary PIN
+        contractorInfo: {
+          contractingAgency,
+          registrationStatus: 'invited',
+          setupToken,
+          setupTokenExpires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+          autoClocking: {
+            enabled: false,
+            processingMode: 'reactive',
+            workSchedule: {
+              startTime: defaultSchedule?.startTime || '09:00',
+              endTime: defaultSchedule?.endTime || '17:00',
+              workDays: defaultSchedule?.workDays || [1, 2, 3, 4, 5],
+              hoursPerDay: defaultSchedule?.hoursPerDay || 8,
+              timezone: defaultSchedule?.timezone || 'America/New_York'
+            },
+            customSettings: {
+              reactive: {
+                cutoffTime: '18:00',
+                graceMinutes: 30
+              }
+            },
+            requiresApproval: false,
+            exceptionNotificationMethod: 'email'
+          }
+        },
+        isActive: false, // Will be activated after setup completion and admin approval
+        createdBy: req.user._id
+      });
+
+      await contractor.save();
+
+      // Send setup invitation email
+      const setupUrl = `${process.env.FRONTEND_URL}/contractor/setup?token=${setupToken}`;
+      
+      try {
+        await sendEmail({
+          to: email,
+          subject: 'Complete Your StaffClock Pro Setup',
+          template: 'contractor-invitation',
+          data: {
+            name,
+            setupUrl,
+            contractingAgency,
+            expiresIn: '7 days'
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send invitation email:', emailError);
+        // Don't fail the request if email fails
+      }
+
+      res.status(201).json({
+        message: 'Contractor invited successfully',
+        contractor: {
+          id: contractor._id,
+          name: contractor.name,
+          email: contractor.email,
+          registrationStatus: contractor.contractorInfo?.registrationStatus,
+          setupUrl // Include for admin reference
+        }
+      });
+
+    } catch (error) {
+      logger.error('Error inviting contractor:', error);
+      res.status(500).json({ error: 'Failed to invite contractor' });
+    }
+  }
+
+  // Complete contractor setup (by contractor)
+  static async completeSetup(req: Request, res: Response) {
+    try {
+      const { token } = req.params;
+      const {
+        pin,
+        preferences,
+        autoClockingSettings,
+        workSchedule,
+        timezone
+      } = req.body;
+
+      // Verify setup token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+      
+      if (decoded.action !== 'contractor_setup') {
+        return res.status(400).json({ error: 'Invalid setup token' });
+      }
+
+      // Find contractor by token
+      const contractor = await User.findOne({
+        tenantId: decoded.tenantId,
+        email: decoded.email,
+        'contractorInfo.setupToken': token,
+        'contractorInfo.setupTokenExpires': { $gt: new Date() }
+      });
+
+      if (!contractor) {
+        return res.status(400).json({ error: 'Invalid or expired setup token' });
+      }
+
+      // Update contractor with setup information
+      contractor.pin = pin;
+      contractor.preferences = {
+        ...contractor.preferences,
+        timezone: timezone || 'America/New_York',
+        ...preferences
+      };
+
+      if (contractor.contractorInfo) {
+        contractor.contractorInfo.registrationStatus = 'setup_completed';
+        contractor.contractorInfo.setupCompletedAt = new Date();
+        contractor.contractorInfo.setupToken = undefined;
+        contractor.contractorInfo.setupTokenExpires = undefined;
+
+        // Update auto-clocking settings
+        if (autoClockingSettings) {
+          contractor.contractorInfo.autoClocking = {
+            ...contractor.contractorInfo.autoClocking,
+            ...autoClockingSettings
+          };
+        }
+
+        // Update work schedule
+        if (workSchedule) {
+          contractor.contractorInfo.autoClocking!.workSchedule = {
+            ...contractor.contractorInfo.autoClocking!.workSchedule,
+            ...workSchedule
+          };
+        }
+      }
+
+      await contractor.save();
+
+      // Generate auth token for immediate login
+      const authToken = jwt.sign(
+        { 
+          userId: contractor._id,
+          tenantId: contractor.tenantId,
+          role: contractor.role
+        },
+        process.env.JWT_SECRET!,
+        { expiresIn: process.env.JWT_EXPIRE || '7d' }
+      );
+
+      res.json({
+        message: 'Setup completed successfully. Awaiting admin approval.',
+        token: authToken,
+        user: {
+          id: contractor._id,
+          name: contractor.name,
+          email: contractor.email,
+          role: contractor.role,
+          registrationStatus: contractor.contractorInfo?.registrationStatus,
+          isActive: contractor.isActive
+        }
+      });
+
+    } catch (error) {
+      logger.error('Error completing contractor setup:', error);
+      res.status(500).json({ error: 'Failed to complete setup' });
+    }
+  }
+
+  // Get pending contractor approvals (admin only)
+  static async getPendingApprovals(req: AuthRequest, res: Response) {
+    try {
+      const contractors = await User.find({
+        tenantId: req.user.tenantId,
+        role: 'contractor',
+        'contractorInfo.registrationStatus': 'setup_completed'
+      })
+      .populate('manager', 'name email')
+      .populate('createdBy', 'name email')
+      .sort({ 'contractorInfo.setupCompletedAt': -1 });
+
+      res.json({
+        contractors: contractors.map(contractor => ({
+          id: contractor._id,
+          name: contractor.name,
+          email: contractor.email,
+          department: contractor.department,
+          contractingAgency: contractor.contractorInfo?.contractingAgency,
+          manager: contractor.manager,
+          setupCompletedAt: contractor.contractorInfo?.setupCompletedAt,
+          autoClockingSettings: contractor.contractorInfo?.autoClocking,
+          createdBy: contractor.createdBy
+        }))
+      });
+
+    } catch (error) {
+      logger.error('Error fetching pending approvals:', error);
+      res.status(500).json({ error: 'Failed to fetch pending approvals' });
+    }
+  }
+
+  // Approve/activate contractor (admin only)
+  static async approveContractor(req: AuthRequest, res: Response) {
+    try {
+      const { contractorId } = req.params;
+      const { approved, overrideSettings, rejectionReason } = req.body;
+
+      const contractor = await User.findOne({
+        _id: contractorId,
+        tenantId: req.user.tenantId,
+        role: 'contractor',
+        'contractorInfo.registrationStatus': 'setup_completed'
+      });
+
+      if (!contractor) {
+        return res.status(404).json({ error: 'Contractor not found or not ready for approval' });
+      }
+
+      if (approved) {
+        // Approve contractor
+        contractor.isActive = true;
+        contractor.contractorInfo!.registrationStatus = 'active';
+        contractor.lastModifiedBy = req.user._id;
+
+        // Apply any admin overrides
+        if (overrideSettings && contractor.contractorInfo?.autoClocking) {
+          contractor.contractorInfo.autoClocking = {
+            ...contractor.contractorInfo.autoClocking,
+            ...overrideSettings
+          };
+        }
+
+        await contractor.save();
+
+        // Send approval notification
+        try {
+          await sendEmail({
+            to: contractor.email!,
+            subject: 'Your StaffClock Pro Account Has Been Approved',
+            template: 'contractor-approved',
+            data: {
+              name: contractor.name,
+              loginUrl: `${process.env.FRONTEND_URL}/login`
+            }
+          });
+        } catch (emailError) {
+          console.error('Failed to send approval email:', emailError);
+        }
+
+        res.json({
+          message: 'Contractor approved and activated',
+          contractor: {
+            id: contractor._id,
+            name: contractor.name,
+            email: contractor.email,
+            registrationStatus: contractor.contractorInfo?.registrationStatus,
+            isActive: contractor.isActive
+          }
+        });
+
+      } else {
+        // Reject contractor
+        contractor.contractorInfo!.registrationStatus = 'inactive';
+        contractor.lastModifiedBy = req.user._id;
+        await contractor.save();
+
+        // Send rejection notification
+        try {
+          await sendEmail({
+            to: contractor.email!,
+            subject: 'StaffClock Pro Account Setup Update',
+            template: 'contractor-rejected',
+            data: {
+              name: contractor.name,
+              reason: rejectionReason || 'Please contact your administrator for more information.'
+            }
+          });
+        } catch (emailError) {
+          console.error('Failed to send rejection email:', emailError);
+        }
+
+        res.json({
+          message: 'Contractor registration rejected',
+          contractor: {
+            id: contractor._id,
+            name: contractor.name,
+            email: contractor.email,
+            registrationStatus: contractor.contractorInfo?.registrationStatus
+          }
+        });
+      }
+
+    } catch (error) {
+      logger.error('Error approving contractor:', error);
+      res.status(500).json({ error: 'Failed to approve contractor' });
+    }
+  }
+
+  // Get contractor settings
+  static async getContractorSettings(req: AuthRequest, res: Response) {
+    try {
+      const contractor = await User.findOne({
+        _id: req.user._id,
+        role: 'contractor',
+        isActive: true
+      });
+
+      if (!contractor) {
+        return res.status(404).json({ error: 'Contractor not found' });
+      }
+
+      res.json({
+        autoClocking: contractor.contractorInfo?.autoClocking,
+        registrationStatus: contractor.contractorInfo?.registrationStatus,
+        contractingAgency: contractor.contractorInfo?.contractingAgency
+      });
+
+    } catch (error) {
+      logger.error('Error fetching contractor settings:', error);
+      res.status(500).json({ error: 'Failed to fetch settings' });
+    }
+  }
+
+  // Update contractor auto-clocking settings
+  static async updateAutoClockingSettings(req: AuthRequest, res: Response) {
+    try {
+      const { autoClockingSettings } = req.body;
+
+      const contractor = await User.findOne({
+        _id: req.user._id,
+        role: 'contractor',
+        isActive: true
+      });
+
+      if (!contractor) {
+        return res.status(404).json({ error: 'Contractor not found' });
+      }
+
+      if (contractor.contractorInfo?.autoClocking) {
+        contractor.contractorInfo.autoClocking = {
+          ...contractor.contractorInfo.autoClocking,
+          ...autoClockingSettings
+        };
+        contractor.lastModifiedBy = req.user._id;
+        await contractor.save();
+      }
+
+      res.json({
+        message: 'Auto-clocking settings updated',
+        settings: contractor.contractorInfo?.autoClocking
+      });
+
+    } catch (error) {
+      logger.error('Error updating auto-clocking settings:', error);
+      res.status(500).json({ error: 'Failed to update settings' });
+    }
+  }
+
+  // Report exception
+  static async reportException(req: AuthRequest, res: Response) {
+    try {
+      const {
+        date,
+        endDate,
+        type,
+        reason,
+        description,
+        isFullDay,
+        hoursAffected,
+        startTime,
+        endTime
+      } = req.body;
+
+      // Validate contractor
+      if (req.user.role !== 'contractor') {
+        return res.status(403).json({ error: 'Only contractors can report exceptions' });
+      }
+
+      // Check for existing exception on this date
+      const existingException = await ContractorException.findOne({
+        tenantId: req.user.tenantId,
+        userId: req.user._id,
+        date: new Date(date),
+        status: { $in: ['pending', 'approved', 'auto_approved'] }
+      });
+
+      if (existingException) {
+        return res.status(400).json({ error: 'Exception already exists for this date' });
+      }
+
+      // Create exception
+      const exception = new ContractorException({
+        tenantId: req.user.tenantId,
+        userId: req.user._id,
+        date: new Date(date),
+        endDate: endDate ? new Date(endDate) : undefined,
+        type,
+        reason,
+        description,
+        isFullDay,
+        hoursAffected,
+        startTime,
+        endTime,
+        createdBy: req.user._id,
+        requiresDocumentation: ['bereavement', 'jury_duty'].includes(type)
+      });
+
+      // Check for auto-approval
+      await (ContractorException as any).autoApproveByRules(exception);
+      
+      await exception.save();
+
+      res.status(201).json({
+        message: 'Exception reported successfully',
+        exception: {
+          id: exception._id,
+          date: exception.date,
+          type: exception.type,
+          status: exception.status,
+          isFullDay: exception.isFullDay,
+          hoursAffected: exception.hoursAffected
+        }
+      });
+
+    } catch (error) {
+      logger.error('Error reporting exception:', error);
+      res.status(500).json({ error: 'Failed to report exception' });
+    }
+  }
+
+  // Get contractor exceptions
+  static async getExceptions(req: AuthRequest, res: Response) {
+    try {
+      const { startDate, endDate, status } = req.query;
+      
+      const query: any = {
+        tenantId: req.user.tenantId,
+        userId: req.user._id
+      };
+
+      if (startDate && endDate) {
+        query.date = {
+          $gte: new Date(startDate as string),
+          $lte: new Date(endDate as string)
+        };
+      }
+
+      if (status) {
+        query.status = status;
+      }
+
+      const exceptions = await ContractorException.find(query)
+        .sort({ date: -1 })
+        .populate('approvedBy rejectedBy', 'name email');
+
+      res.json({ exceptions });
+
+    } catch (error) {
+      logger.error('Error fetching exceptions:', error);
+      res.status(500).json({ error: 'Failed to fetch exceptions' });
+    }
+  }
+
   /**
    * Get all contractors for the tenant (Admin/Manager only)
    */
