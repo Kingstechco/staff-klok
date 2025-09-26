@@ -305,7 +305,7 @@ export class SouthAfricanComplianceProvider extends ComplianceProvider {
     let geographicRisk = 2; // South Africa baseline
     let ownershipRisk = 5;
     let complianceRisk = 5;
-    let financialRisk = 5;
+    let transactionRisk = 5;
     
     const riskReasons: string[] = [];
     const recommendedActions: string[] = [];
@@ -362,16 +362,16 @@ export class SouthAfricanComplianceProvider extends ComplianceProvider {
     // Financial Risk Assessment
     const revenue = orgData.financialInfo?.estimatedAnnualRevenue || 0;
     if (revenue > 50000000) { // R50 million
-      financialRisk += 1;
+      transactionRisk += 1;
       recommendedActions.push('Large business - enhanced monitoring');
     } else if (revenue < 100000) { // R100,000
-      financialRisk += 2;
+      transactionRisk += 2;
       riskReasons.push('Very small business - verify legitimacy');
     }
     
     // Cash-intensive business check
     if (revenue > 1000000 && !orgData.financialInfo?.bankAccount?.verified) {
-      financialRisk += 3;
+      transactionRisk += 3;
       riskReasons.push('Large cash business without verified banking');
       recommendedActions.push('Verify all banking relationships');
     }
@@ -393,7 +393,7 @@ export class SouthAfricanComplianceProvider extends ComplianceProvider {
       recommendedActions.push('Verify B-BBEE compliance status');
     }
     
-    const averageRisk = (industryRisk + geographicRisk + ownershipRisk + complianceRisk + financialRisk) / 5;
+    const averageRisk = (industryRisk + geographicRisk + ownershipRisk + transactionRisk + complianceRisk) / 5;
     const overallRisk = averageRisk <= 2.5 ? 'low' : 
                        averageRisk <= 5 ? 'medium' : 
                        averageRisk <= 7.5 ? 'high' : 'critical';
@@ -404,8 +404,8 @@ export class SouthAfricanComplianceProvider extends ComplianceProvider {
         industryRisk,
         geographicRisk,
         ownershipRisk,
-        complianceRisk,
-        financialRisk
+        transactionRisk,
+        complianceRisk
       },
       riskReasons,
       recommendedActions

@@ -413,6 +413,143 @@ FIXED-TERM EMPLOYMENT CONTRACT (South Africa - BCEA Compliant)
    - Salary review annually or as per company policy
 
 This contract complies with the Basic Conditions of Employment Act and Labour Relations Act.
+      `,
+      'freelancer': `
+FREELANCE SERVICES AGREEMENT (South Africa)
+
+IMPORTANT: This agreement creates a commercial relationship for project-based services.
+
+1. FREELANCER STATUS
+   - Freelancer is an independent service provider
+   - Specializes in specific project deliverables
+   - Responsible for own tax affairs including PAYE, VAT if applicable
+   - No BCEA benefits apply
+
+2. PROJECT SCOPE
+   - Work defined by specific project deliverables
+   - Freelancer has discretion over methods and timing
+   - May work remotely or from own workspace
+   - Can engage with multiple clients simultaneously
+
+3. PAYMENT TERMS
+   - Payment upon completion of agreed deliverables
+   - Invoice-based payment system only
+   - Project-based or milestone-based payments
+   - 30-day payment terms from invoice receipt
+
+This agreement complies with SA Labour Relations Act for genuine project-based services.
+      `,
+      'consultant': `
+CONSULTING SERVICES AGREEMENT (South Africa)
+
+IMPORTANT: This agreement is for professional advisory services only.
+
+1. CONSULTANT STATUS
+   - Consultant provides professional advisory services
+   - High degree of professional independence
+   - Responsible for own tax affairs including PAYE, VAT
+   - No BCEA benefits apply
+
+2. ADVISORY NATURE
+   - Provides expert advice and recommendations
+   - Does not perform operational or administrative tasks
+   - Professional expertise and qualifications required
+   - Multiple client relationships expected
+
+3. PAYMENT TERMS
+   - Professional fees invoiced monthly or per engagement
+   - Payment based on time or fixed project fees
+   - Consultant handles own VAT registration if required
+   - 30-day payment terms from invoice receipt
+
+This agreement complies with SA professional services regulations.
+      `,
+      'temporary_employee': `
+TEMPORARY EMPLOYMENT CONTRACT (South Africa - BCEA Compliant)
+
+⚠️ IMPORTANT: This is an EMPLOYMENT relationship. Worker CANNOT issue invoices.
+
+1. EMPLOYMENT RELATIONSHIP
+   - This creates a temporary employment relationship under BCEA
+   - Employee entitled to labour law protections
+   - Company responsible for PAYE, UIF deductions
+   - May be placed via Temporary Employment Services (TES)
+
+2. WORKING CONDITIONS
+   - Working hours as per BCEA (45 hours/week maximum)
+   - Overtime rates apply after standard hours
+   - Daily and weekly rest periods required
+
+3. BENEFITS (Pro-rata basis)
+   - Annual leave earned pro-rata
+   - Sick leave entitlement as per BCEA
+   - Public holiday pay applicable
+
+4. PAYMENT METHOD
+   - ✅ WAGES through payroll system
+   - ❌ NO INVOICES PERMITTED
+   - PAYE and UIF deducted by company
+
+This contract complies with BCEA and TES Act provisions.
+      `,
+      'casual_worker': `
+CASUAL WORKER AGREEMENT (South Africa - BCEA Compliant)
+
+⚠️ IMPORTANT: This is an EMPLOYMENT relationship. Worker CANNOT issue invoices.
+
+1. EMPLOYMENT RELATIONSHIP
+   - Casual employment relationship under BCEA
+   - Called to work on irregular basis
+   - Still subject to labour law protections when working
+   - Company responsible for tax deductions
+
+2. WORK ARRANGEMENT
+   - Work offered on availability basis
+   - No guaranteed hours or regular schedule
+   - Still supervised when working
+   - Company equipment and premises used
+
+3. LIMITED BENEFITS
+   - Leave earned pro-rata based on time worked
+   - Some BCEA protections apply
+   - Basic working conditions must be met
+
+4. PAYMENT METHOD
+   - ✅ WAGES paid for time worked
+   - ❌ NO INVOICES PERMITTED
+   - PAYE deducted when earnings threshold met
+
+This contract complies with BCEA provisions for casual employment.
+      `,
+      'labour_broker_employee': `
+LABOUR BROKER PLACEMENT (South Africa - TES Act Compliant)
+
+⚠️ IMPORTANT: This is an EMPLOYMENT relationship via labour broker. Worker CANNOT issue invoices.
+
+1. EMPLOYMENT RELATIONSHIP
+   - Employee of Temporary Employment Service (labour broker)
+   - Placed at client company for specific period
+   - Full employment rights under BCEA and TES Act
+   - Labour broker responsible for employment obligations
+
+2. TES ACT COMPLIANCE
+   - Placement for genuine temporary business need
+   - Equal treatment with permanent employees
+   - Labour broker handles HR obligations
+   - Client company provides work supervision
+
+3. BENEFITS AND PROTECTIONS
+   - Full BCEA benefits through labour broker
+   - Equal pay for equal work principle
+   - Labour law protections maintained
+   - Right to join trade union
+
+4. PAYMENT METHOD
+   - ✅ WAGES paid via labour broker payroll
+   - ❌ NO INVOICES PERMITTED
+   - PAYE, UIF handled by labour broker
+
+This arrangement complies with Temporary Employment Services Act.
       `
     };
     

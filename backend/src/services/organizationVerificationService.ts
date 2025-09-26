@@ -334,7 +334,8 @@ export class OrganizationVerificationService {
   static async performSAComplianceChecks(organization: IOrganization): Promise<SouthAfricanComplianceCheck> {
     const checks: SouthAfricanComplianceCheck = {
       companyRegistrationValid: false,
-      taxComplianceStatus: 'unknown'
+      taxComplianceStatus: 'unknown',
+      additionalChecks: {}
     };
     
     try {
@@ -358,9 +359,9 @@ export class OrganizationVerificationService {
           doc.type === 'vat_registration_certificate'
         );
         if (vatDoc && vatDoc.verified) {
-          checks.vatRegistrationValid = true;
+          checks.additionalChecks.vatRegistrationValid = true;
         } else {
-          checks.vatRegistrationValid = false;
+          checks.additionalChecks.vatRegistrationValid = false;
           checks.taxComplianceStatus = 'non_compliant';
         }
       }
@@ -368,7 +369,7 @@ export class OrganizationVerificationService {
       // 4. B-BBEE status check (for larger organizations)
       if (organization.financialInfo.estimatedAnnualRevenue > 10000000) {
         // This would integrate with B-BBEE database
-        checks.beeStatus = 'not_applicable'; // Default
+        checks.additionalChecks.beeStatus = 'not_applicable'; // Default
       }
       
       // 5. Directors/Beneficial owners check
@@ -386,14 +387,14 @@ export class OrganizationVerificationService {
         }
       }
       
-      checks.directorsCheck = {
+      checks.additionalChecks.directorsCheck = {
         allDirectorsVerified,
         flaggedDirectors
       };
       
       // 6. CIFA (Credit Bureau) check
       // This would integrate with credit bureaus like Experian, TransUnion SA
-      checks.cifaStatus = 'pending';
+      checks.additionalChecks.cifaStatus = 'pending';
       
     } catch (error) {
       logger.error('Error performing SA compliance checks:', error);

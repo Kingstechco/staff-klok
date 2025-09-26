@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import ContractorInvoice, { ContractorClassification } from '../models/ContractorInvoice';
 import { ContractorClassificationService } from '../services/ContractorClassificationService';
-import { ComplianceProviderFactory } from '../services/ComplianceProviderFactory';
 import logger from '../utils/logger';
 
 interface AuthenticatedRequest extends Request {

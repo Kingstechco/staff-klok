@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Model } from 'mongoose';
 
 export type InvoiceStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'paid' | 'overdue' | 'cancelled';
 export type ContractorClassification = 
@@ -136,6 +136,15 @@ export interface IContractorInvoice extends Document {
   
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IContractorInvoiceModel extends Model<IContractorInvoice> {
+  generateInvoiceNumber(organizationId: mongoose.Types.ObjectId): Promise<string>;
+  canContractorIssueInvoices(contractorClassification: ContractorClassification): boolean;
+  isEmployeeUnderSALaw(contractorClassification: ContractorClassification): boolean;
+  getContractorComplianceInfo(contractorClassification: ContractorClassification): any;
+  calculateTax(subtotal: number, contractorClassification: string, countryCode?: string, additionalParams?: Record<string, any>): any;
+  calculateSouthAfricanTax(subtotal: number, vatRegistered: boolean, vatRate?: number): any;
 }
 
 const InvoiceLineItemSchema = new Schema<IInvoiceLineItem>({
@@ -666,5 +675,5 @@ ContractorInvoiceSchema.statics.calculateSouthAfricanTax = function(
   return this.calculateTax(subtotal, 'independent_contractor', 'ZA', { vatRegistered, vatRate });
 };
 
-const ContractorInvoice = mongoose.model<IContractorInvoice>('ContractorInvoice', ContractorInvoiceSchema);
+const ContractorInvoice = mongoose.model<IContractorInvoice, IContractorInvoiceModel>('ContractorInvoice', ContractorInvoiceSchema);
 export default ContractorInvoice;
