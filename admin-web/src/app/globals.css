@@ -46,28 +46,43 @@
 }
 
 @layer components {
+  /* Card Components */
   .oklok-card {
     @apply bg-white/80 backdrop-blur-lg rounded-2xl shadow-sm border border-white/20 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 p-6;
   }
 
   .oklok-card-interactive {
-    @apply oklok-card hover:scale-[1.02] active:scale-[0.98] cursor-pointer;
+    @apply oklok-card hover:scale-[1.02] active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20;
   }
 
+  /* Button Components - Following 44px minimum tap target */
   .oklok-button-primary {
-    @apply bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none;
+    @apply bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium px-6 py-3 min-h-[44px] rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-2;
   }
 
   .oklok-button-secondary {
-    @apply bg-white/80 backdrop-blur-sm hover:bg-white text-gray-700 font-medium px-6 py-3 rounded-xl border border-gray-200 transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0;
+    @apply bg-white/80 backdrop-blur-sm hover:bg-white text-gray-700 font-medium px-6 py-3 min-h-[44px] rounded-xl border border-gray-200 transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-gray-500/20 focus:ring-offset-2;
   }
 
   .oklok-button-danger {
-    @apply bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-medium px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0;
+    @apply bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-medium px-6 py-3 min-h-[44px] rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2;
   }
 
+  .oklok-button-success {
+    @apply bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-medium px-6 py-3 min-h-[44px] rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2;
+  }
+
+  /* Input Components */
   .oklok-input {
-    @apply w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 placeholder:text-gray-400;
+    @apply w-full px-4 py-3 min-h-[44px] bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 placeholder:text-gray-400 text-base;
+  }
+
+  .oklok-input-error {
+    @apply oklok-input border-red-300 focus:border-red-500 focus:ring-red-500/20;
+  }
+
+  .oklok-input-success {
+    @apply oklok-input border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500/20;
   }
 
   .oklok-badge {
@@ -169,6 +184,191 @@
   .oklok-shadow-strong {
     box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15), 0 15px 35px -5px rgba(0, 0, 0, 0.08);
   }
+
+  /* Loading States */
+  .oklok-skeleton {
+    @apply bg-gray-200 animate-pulse rounded-lg;
+  }
+
+  .oklok-loading-dot {
+    @apply w-2 h-2 bg-indigo-600 rounded-full animate-pulse;
+  }
+
+  .oklok-spinner {
+    @apply animate-spin rounded-full h-4 w-4 border-2 border-indigo-600 border-t-transparent;
+  }
+
+  /* Empty States */
+  .oklok-empty-state {
+    @apply text-center py-12 px-6;
+  }
+
+  .oklok-empty-state-icon {
+    @apply w-12 h-12 mx-auto text-gray-400 mb-4;
+  }
+
+  .oklok-empty-state-title {
+    @apply text-lg font-medium text-gray-900 mb-2;
+  }
+
+  .oklok-empty-state-description {
+    @apply text-gray-500 max-w-md mx-auto;
+  }
+
+  /* Error States */
+  .oklok-error-state {
+    @apply text-center py-8 px-6;
+  }
+
+  .oklok-error-icon {
+    @apply w-10 h-10 mx-auto text-red-400 mb-3;
+  }
+
+  .oklok-error-title {
+    @apply text-lg font-medium text-red-900 mb-2;
+  }
+
+  .oklok-error-description {
+    @apply text-red-700 max-w-md mx-auto mb-4;
+  }
+
+  /* Toast/Alert Components */
+  .oklok-toast {
+    @apply fixed bottom-4 right-4 max-w-sm oklok-card animate-slide-up z-50;
+  }
+
+  .oklok-toast-success {
+    @apply oklok-toast border-l-4 border-emerald-500;
+  }
+
+  .oklok-toast-error {
+    @apply oklok-toast border-l-4 border-red-500;
+  }
+
+  .oklok-toast-warning {
+    @apply oklok-toast border-l-4 border-amber-500;
+  }
+
+  .oklok-toast-info {
+    @apply oklok-toast border-l-4 border-blue-500;
+  }
+
+  /* Form Components */
+  .oklok-form-group {
+    @apply mb-6;
+  }
+
+  .oklok-label {
+    @apply block text-sm font-medium text-gray-700 mb-2;
+  }
+
+  .oklok-label-required::after {
+    content: ' *';
+    @apply text-red-500;
+  }
+
+  .oklok-form-error {
+    @apply text-sm text-red-600 mt-1;
+  }
+
+  .oklok-form-help {
+    @apply text-sm text-gray-500 mt-1;
+  }
+
+  /* Modal Components */
+  .oklok-modal-overlay {
+    @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4;
+  }
+
+  .oklok-modal {
+    @apply oklok-card max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in;
+  }
+
+  .oklok-modal-header {
+    @apply border-b border-gray-200 pb-4 mb-6;
+  }
+
+  .oklok-modal-title {
+    @apply text-lg font-semibold text-gray-900;
+  }
+
+  .oklok-modal-footer {
+    @apply border-t border-gray-200 pt-4 mt-6 flex justify-end space-x-3;
+  }
+
+  /* Table Components */
+  .oklok-table {
+    @apply w-full border-collapse;
+  }
+
+  .oklok-table-header {
+    @apply bg-gray-50 border-b border-gray-200;
+  }
+
+  .oklok-table-header-cell {
+    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+  }
+
+  .oklok-table-row {
+    @apply border-b border-gray-200 hover:bg-gray-50 transition-colors;
+  }
+
+  .oklok-table-cell {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+  }
+
+  /* Progress Components */
+  .oklok-progress {
+    @apply w-full bg-gray-200 rounded-full h-2 overflow-hidden;
+  }
+
+  .oklok-progress-bar {
+    @apply h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-300;
+  }
+
+  /* Divider */
+  .oklok-divider {
+    @apply border-t border-gray-200 my-6;
+  }
+
+  /* Focus States */
+  .oklok-focus-visible {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:ring-offset-2;
+  }
+
+  /* High Contrast Mode Support */
+  @media (prefers-contrast: high) {
+    .oklok-card {
+      @apply border-2 border-gray-900;
+    }
+    
+    .oklok-button-primary {
+      @apply border-2 border-indigo-900;
+    }
+  }
+
+  /* Reduced Motion Support */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-in,
+    .animate-in-fast,
+    .animate-in-slow,
+    .animate-fade-in,
+    .animate-slide-up,
+    .animate-scale-in {
+      animation: none;
+    }
+    
+    .oklok-card-interactive:hover {
+      transform: none;
+    }
+    
+    .oklok-button-primary:hover,
+    .oklok-button-secondary:hover,
+    .oklok-button-danger:hover,
+    .oklok-button-success:hover {
+      transform: none;
+    }
+  }
 }
 
 @layer utilities {
@@ -226,6 +426,166 @@
   
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Loading Spinner Variations */
+  .oklok-spinner-sm {
+    @apply animate-spin rounded-full h-3 w-3 border border-indigo-600 border-t-transparent;
+  }
+
+  .oklok-spinner-lg {
+    @apply animate-spin rounded-full h-6 w-6 border-2 border-indigo-600 border-t-transparent;
+  }
+
+  .oklok-spinner-white {
+    @apply animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent;
+  }
+
+  /* Pulse Loading Animation */
+  .oklok-pulse-slow {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .oklok-pulse-fast {
+    animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Loading Dots Animation */
+  .oklok-loading-dots {
+    display: inline-flex;
+    gap: 2px;
+  }
+
+  .oklok-loading-dots > div {
+    @apply w-1 h-1 bg-indigo-600 rounded-full animate-bounce;
+  }
+
+  .oklok-loading-dots > div:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+
+  .oklok-loading-dots > div:nth-child(3) {
+    animation-delay: 0.2s;
+  }
+
+  /* Microinteraction Utilities */
+  .oklok-hover-lift {
+    transition: transform 0.2s ease-out;
+  }
+
+  .oklok-hover-lift:hover {
+    transform: translateY(-2px);
+  }
+
+  .oklok-hover-scale {
+    transition: transform 0.2s ease-out;
+  }
+
+  .oklok-hover-scale:hover {
+    transform: scale(1.02);
+  }
+
+  /* Accessibility Utilities */
+  .oklok-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .oklok-focus-trap {
+    @apply focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:ring-offset-2;
+  }
+
+  /* Color Accessibility Utilities */
+  .oklok-text-contrast {
+    @apply text-gray-900;
+  }
+
+  .oklok-text-contrast-medium {
+    @apply text-gray-700;
+  }
+
+  .oklok-text-contrast-low {
+    @apply text-gray-600;
+  }
+
+  /* Interactive States */
+  .oklok-interactive {
+    @apply transition-all duration-200 cursor-pointer;
+  }
+
+  .oklok-interactive:hover {
+    @apply transform -translate-y-0.5;
+  }
+
+  .oklok-interactive:active {
+    @apply transform translate-y-0;
+  }
+
+  /* Status Colors */
+  .oklok-status-success {
+    @apply text-emerald-600 bg-emerald-50;
+  }
+
+  .oklok-status-warning {
+    @apply text-amber-600 bg-amber-50;
+  }
+
+  .oklok-status-error {
+    @apply text-red-600 bg-red-50;
+  }
+
+  .oklok-status-info {
+    @apply text-blue-600 bg-blue-50;
+  }
+
+  /* Grid Utilities */
+  .oklok-grid-auto-fit {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .oklok-grid-auto-fill {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  /* Responsive Grid Patterns */
+  .oklok-grid-responsive-sm {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .oklok-grid-responsive-md {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .oklok-grid-responsive-lg {
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  }
+
+  /* Wide Screen Optimizations */
+  @media (min-width: 1440px) {
+    .oklok-max-width-ultra {
+      max-width: 1440px;
+    }
+    
+    .oklok-grid-ultra-wide {
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+  }
+
+  @media (min-width: 1920px) {
+    .oklok-max-width-ultra {
+      max-width: 1600px;
+    }
+    
+    .oklok-grid-ultra-wide {
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    }
   }
 }
 

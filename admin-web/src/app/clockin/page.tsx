@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTimeTracking } from '@/contexts/TimeTrackingContext';
 import OklokLogo from '@/components/ui/OklokLogo';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Toast from '@/components/ui/Toast';
 
 export default function ClockIn() {
   const { login, currentUser, logout } = useAuth();
@@ -32,16 +34,24 @@ export default function ClockIn() {
   // Refresh entries when user changes to sync current entry state
   useEffect(() => {
     if (currentUser) {
-      refreshEntries();
+      refreshEntries(currentUser.id);
     }
   }, [currentUser, refreshEntries]);
 
   const isLoggedIn = !!currentUser;
   const isClockedIn = !!currentEntry;
 
-  // Get user's weekly hours
-  const userEntries = currentUser ? getUserEntries(currentUser.id, 7) : [];
-  const weeklyHours = userEntries.reduce((sum, entry) => sum + (entry.totalHours || 0), 0);
+  // Get user's weekly hours (memoized to prevent recalculation on every render)
+  const { weeklyHours } = useMemo(() => {
+    if (!currentUser) {
+      return { weeklyHours: 0 };
+    }
+    
+    const entries = getUserEntries(currentUser.id, 7);
+    const hours = entries.reduce((sum, entry) => sum + (entry.totalHours || 0), 0);
+    
+    return { weeklyHours: hours };
+  }, [currentUser, getUserEntries]);
 
   const handleLogin = async (inputPin: string) => {
     setIsLoading(true);
@@ -70,12 +80,13 @@ export default function ClockIn() {
     } else {
       try {
         await clockIn(currentUser.id, currentUser.name, wifiStatus);
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Show user-friendly error messages
-        if (error.message === 'Already clocked in') {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        if (errorMessage === 'Already clocked in') {
           setShowError('You are already clocked in. Please clock out first before starting a new session.');
         } else {
-          setShowError(`Failed to clock in: ${error.message}`);
+          setShowError(`Failed to clock in: ${errorMessage}`);
         }
         setTimeout(() => setShowError(null), 5000); // Auto-hide after 5 seconds
       }
@@ -87,8 +98,9 @@ export default function ClockIn() {
       try {
         await clockOut(currentUser.id);
         setShowClockOutConfirm(false);
-      } catch (error: any) {
-        setShowError(`Failed to clock out: ${error.message}`);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setShowError(`Failed to clock out: ${errorMessage}`);
         setTimeout(() => setShowError(null), 5000);
         setShowClockOutConfirm(false);
       }
@@ -115,16 +127,19 @@ export default function ClockIn() {
             <p className="mt-2 text-gray-600">Enter your PIN to continue</p>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+          <div className="oklok-card animate-scale-in">
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="mb-6 oklok-error-state">
+                <div className="oklok-error-icon">
+                  <ExclamationTriangleIcon />
+                </div>
+                <p className="oklok-error-description">{error}</p>
               </div>
             )}
             
             <form className="space-y-6" onSubmit={handlePinSubmit}>
-              <div>
-                <label htmlFor="pin" className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="oklok-form-group">
+                <label htmlFor="pin" className="oklok-label">
                   Enter Your PIN {pin.length > 0 && <span className="text-xs text-gray-500">({pin.length}/4)</span>}
                 </label>
                 <input
@@ -138,23 +153,35 @@ export default function ClockIn() {
                   }}
                   maxLength={6}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-base text-center text-lg tracking-widest"
+                  className="oklok-input text-center text-lg tracking-widest"
                   placeholder="••••"
                   autoComplete="off"
                   autoFocus
+                  aria-describedby="pin-help"
                 />
+                <div id="pin-help" className="oklok-form-help">
+                  Enter your 4-6 digit PIN to access the clock-in system
+                </div>
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading || pin.trim().length < 4}
-                className={`w-full py-3 px-4 font-medium rounded-xl transition-all duration-200 ${
-                  isLoading || pin.trim().length < 4
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg transform hover:-translate-y-0.5'
+                className={`oklok-button-primary w-full ${
+                  isLoading || pin.trim().length < 4 
+                    ? 'opacity-50 cursor-not-allowed hover:transform-none' 
+                    : ''
                 }`}
+                aria-label={isLoading ? 'Signing in, please wait' : 'Sign in to clock system'}
               >
-                {isLoading ? 'Signing In...' : `Sign In${pin.trim().length < 4 ? ` (${4 - pin.trim().length} more digits)` : ''}`}
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <LoadingSpinner size="sm" color="white" className="mr-2" />
+                    Signing In...
+                  </span>
+                ) : (
+                  `Sign In${pin.trim().length < 4 ? ` (${4 - pin.trim().length} more digits)` : ''}`
+                )}
               </button>
             </form>
 
@@ -203,74 +230,47 @@ export default function ClockIn() {
             </div>
           </div>
 
-          {/* Error Toast */}
-          {showError && (
-            <div className="mb-6 animate-in">
-              <div className="max-w-md mx-auto bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <ExclamationTriangleIcon className="h-5 w-5 text-red-400" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-red-800">{showError}</p>
-                  </div>
-                  <div className="ml-auto pl-3">
-                    <button
-                      onClick={() => setShowError(null)}
-                      className="inline-flex text-red-400 hover:text-red-600"
-                    >
-                      <span className="sr-only">Dismiss</span>
-                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Status Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
             {/* Current Status */}
-            <div className="stat-card animate-in p-4 sm:p-6" style={{ animationDelay: '100ms' }}>
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Current Status</h3>
-                <div className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
+            <div className="oklok-card animate-in" style={{ animationDelay: '100ms' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Current Status</h3>
+                <div className={`oklok-badge ${
                   isClockedIn 
-                    ? 'bg-green-100 text-green-700' 
+                    ? 'oklok-badge-success' 
                     : 'bg-gray-100 text-gray-700'
                 }`}>
                   {isClockedIn ? 'Working' : 'Off Duty'}
                 </div>
               </div>
               <div className="flex items-center">
-                <div className={`h-3 w-3 rounded-full mr-3 ${
-                  isClockedIn ? 'bg-green-500' : 'bg-gray-400'
+                <div className={`oklok-status-indicator mr-3 ${
+                  isClockedIn ? 'oklok-status-online' : 'oklok-status-offline'
                 }`} />
-                <span className="text-gray-600 text-sm sm:text-base">
+                <span className="text-gray-600">
                   {isClockedIn ? 'You are currently clocked in' : 'Ready to clock in'}
                 </span>
               </div>
             </div>
 
             {/* Network Status */}
-            <div className="stat-card animate-in p-4 sm:p-6" style={{ animationDelay: '200ms' }}>
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Network Status</h3>
-                <div className="px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-green-100 text-green-700">
+            <div className="oklok-card animate-in" style={{ animationDelay: '200ms' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Network Status</h3>
+                <div className="oklok-badge oklok-badge-success">
                   ✓ Verified
                 </div>
               </div>
               <div className="flex items-center">
-                <WifiIcon className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-3" />
-                <span className="text-gray-600 text-sm sm:text-base truncate">Connected to: {wifiStatus}</span>
+                <WifiIcon className="h-5 w-5 text-emerald-500 mr-3" aria-hidden="true" />
+                <span className="text-gray-600 truncate">Connected to: {wifiStatus}</span>
               </div>
             </div>
           </div>
 
           {/* Clock In/Out Section */}
-          <div className="chart-container text-center mb-6 sm:mb-8 animate-in p-6 sm:p-8" style={{ animationDelay: '300ms' }}>
+          <div className="oklok-card text-center mb-8 animate-in" style={{ animationDelay: '300ms' }}>
             <div className="mb-6">
               <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 font-mono">
                 {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -287,20 +287,17 @@ export default function ClockIn() {
             
             <button
               onClick={handleClockToggle}
-              className={`w-full max-w-xs px-8 sm:px-12 py-3 sm:py-4 text-lg sm:text-xl font-semibold rounded-2xl text-white shadow-lg transition-all duration-200 transform hover:-translate-y-1 hover:shadow-xl ${
-                isClockedIn
-                  ? 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700'
-                  : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
-              }`}
+              className={`${isClockedIn ? 'oklok-button-danger' : 'oklok-button-success'} w-full max-w-xs text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-5 oklok-hover-lift`}
+              aria-label={isClockedIn ? 'Clock out from work' : 'Clock in to work'}
             >
               {isClockedIn ? (
                 <div className="flex items-center justify-center">
-                  <LogoutIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
+                  <LogoutIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2" aria-hidden="true" />
                   Clock Out
                 </div>
               ) : (
                 <div className="flex items-center justify-center">
-                  <LoginIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
+                  <LoginIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2" aria-hidden="true" />
                   Clock In
                 </div>
               )}
@@ -309,40 +306,42 @@ export default function ClockIn() {
 
           {/* Clock Out Confirmation Dialog */}
           {showClockOutConfirm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-in">
-                <div className="text-center mb-6">
+            <div className="oklok-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="clock-out-title">
+              <div className="oklok-modal">
+                <div className="oklok-modal-header text-center">
                   <div className="mx-auto h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
-                    <ExclamationTriangleIcon className="h-6 w-6 text-amber-600" />
+                    <ExclamationTriangleIcon className="h-6 w-6 text-amber-600" aria-hidden="true" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirm Clock Out</h3>
-                  <p className="text-gray-600">
+                  <h3 id="clock-out-title" className="oklok-modal-title">Confirm Clock Out</h3>
+                  <p className="text-gray-600 mt-2">
                     Are you sure you want to clock out? This will end your current work session.
                   </p>
                   {currentEntry && (
-                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-600">
-                        Started at: {new Date(currentEntry.clockIn).toLocaleTimeString('en-US', {
+                    <div className="mt-4 p-4 bg-gray-50 rounded-xl">
+                      <p className="text-sm text-gray-600 mb-1">
+                        <span className="font-medium">Started at:</span> {new Date(currentEntry.clockIn).toLocaleTimeString('en-US', {
                           hour: '2-digit',
                           minute: '2-digit'
                         })}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Duration: {Math.round((new Date().getTime() - new Date(currentEntry.clockIn).getTime()) / (1000 * 60))} minutes
+                        <span className="font-medium">Duration:</span> {Math.round((new Date().getTime() - new Date(currentEntry.clockIn).getTime()) / (1000 * 60))} minutes
                       </p>
                     </div>
                   )}
                 </div>
-                <div className="flex space-x-3">
+                <div className="oklok-modal-footer">
                   <button
                     onClick={cancelClockOut}
-                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                    className="oklok-button-secondary"
+                    aria-label="Cancel clock out"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={confirmClockOut}
-                    className="flex-1 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-lg hover:from-red-600 hover:to-pink-700 transition-all font-medium"
+                    className="oklok-button-danger"
+                    aria-label="Confirm clock out"
                   >
                     Clock Out
                   </button>
@@ -352,18 +351,23 @@ export default function ClockIn() {
           )}
 
           {/* Weekly Progress */}
-          <div className="chart-container animate-in p-4 sm:p-6" style={{ animationDelay: '400ms' }}>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Weekly Progress</h3>
+          <div className="oklok-card animate-in" style={{ animationDelay: '400ms' }}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Weekly Progress</h3>
             
-            <div className="mb-4 sm:mb-6">
+            <div className="mb-6">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-medium text-gray-700">Hours this week</span>
-                <span className="text-base sm:text-lg font-bold text-gray-900">{weeklyHours}h / 45h</span>
+                <span className="text-lg font-bold text-gray-900">{weeklyHours}h / 45h</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3 sm:h-4">
+              <div className="oklok-progress">
                 <div 
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 sm:h-4 rounded-full transition-all duration-500"
+                  className="oklok-progress-bar"
                   style={{ width: `${Math.min((weeklyHours / 45) * 100, 100)}%` }}
+                  role="progressbar"
+                  aria-valuenow={Math.round((weeklyHours / 45) * 100)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`${Math.round((weeklyHours / 45) * 100)}% of weekly target completed`}
                 />
               </div>
               <p className="text-xs text-gray-600 mt-2">
@@ -371,42 +375,45 @@ export default function ClockIn() {
               </p>
             </div>
             
-            <div className="grid grid-cols-3 gap-3 sm:gap-6 text-center">
-              <div className="p-3 sm:p-4 bg-gray-50 rounded-xl">
-                <div className="text-xl sm:text-2xl font-bold text-gray-900">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="oklok-metric-card text-center">
+                <div className="oklok-metric-value text-xl">
                   {Math.max(45 - weeklyHours, 0).toFixed(1)}
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600">Hours remaining</div>
+                <div className="oklok-metric-label">Hours remaining</div>
               </div>
-              <div className="p-3 sm:p-4 bg-gray-50 rounded-xl">
-                <div className="text-xl sm:text-2xl font-bold text-gray-900">
+              <div className="oklok-metric-card text-center">
+                <div className={`oklok-metric-value text-xl ${isClockedIn ? 'text-emerald-600' : 'text-gray-900'}`}>
                   {isClockedIn ? 'Working' : 'Off'}
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600">Current status</div>
+                <div className="oklok-metric-label">Current status</div>
               </div>
-              <div className="p-3 sm:p-4 bg-gray-50 rounded-xl">
-                <div className="text-xl sm:text-2xl font-bold text-gray-900">
+              <div className="oklok-metric-card text-center">
+                <div className="oklok-metric-value text-xl">
                   {Math.round((weeklyHours / 45) * 100)}%
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600">Weekly progress</div>
+                <div className="oklok-metric-label">Weekly progress</div>
               </div>
             </div>
           </div>
         </div>
       </div>
+      
+      {/* Toast Notifications */}
+      {showError && (
+        <Toast
+          message={showError}
+          type="error"
+          visible={!!showError}
+          onClose={() => setShowError(null)}
+          duration={5000}
+        />
+      )}
     </div>
   );
 }
 
 // Icon Components
-function ClockIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  );
-}
-
 function WifiIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">

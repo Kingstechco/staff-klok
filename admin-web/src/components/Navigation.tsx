@@ -56,12 +56,16 @@ export default function Navigation() {
     .filter(item => !item.roles || (currentUser && item.roles.includes(currentUser.role)));
 
   return (
-    <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+    <nav className="oklok-header sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="flex items-center">
+              <Link 
+                href="/" 
+                className="flex items-center focus:outline-none focus:ring-2 focus:ring-indigo-500/20 rounded-lg p-1"
+                aria-label="Go to dashboard"
+              >
                 <OklokLogo size="md" />
                 {currentTenant && currentTenant.name !== 'Oklok' && (
                   <div className="ml-3 border-l border-gray-300 pl-3">
@@ -75,21 +79,21 @@ export default function Navigation() {
                 )}
               </Link>
             </div>
-            <div className="hidden md:ml-8 md:flex md:space-x-6 lg:space-x-8">
+            <div className="hidden md:ml-8 md:flex md:flex-wrap md:gap-x-2 xl:gap-x-4">
               {navigation.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'border-indigo-500 text-gray-900'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    className={`oklok-nav-item min-h-[44px] whitespace-nowrap ${
+                      isActive ? 'oklok-nav-item-active' : ''
                     }`}
+                    aria-current={isActive ? 'page' : undefined}
+                    aria-label={`Navigate to ${item.name}`}
                   >
-                    <item.icon className="w-4 h-4 lg:w-5 lg:h-5 mr-1 lg:mr-2" />
-                    <span className="hidden lg:inline">{item.name}</span>
+                    <item.icon className="w-4 h-4 lg:w-5 lg:h-5 mr-2 flex-shrink-0" aria-hidden="true" />
+                    <span className="hidden lg:inline text-balance">{item.name}</span>
                     <span className="lg:hidden">{item.name.split(' ')[0]}</span>
                   </Link>
                 );
@@ -100,33 +104,53 @@ export default function Navigation() {
           <div className="flex items-center">
             <div className="hidden md:ml-6 md:flex md:items-center">
               <div className="relative mr-3">
-                <button className="p-2 text-gray-400 hover:text-gray-500 relative">
-                  <BellIcon className="h-5 w-5 lg:h-6 lg:w-6" />
-                  <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
+                <button 
+                  className="p-2 text-gray-400 hover:text-gray-500 relative min-h-[44px] min-w-[44px] rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  aria-label="View notifications"
+                >
+                  <BellIcon className="h-5 w-5 lg:h-6 lg:w-6" aria-hidden="true" />
+                  <span 
+                    className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"
+                    aria-label="You have new notifications"
+                  ></span>
                 </button>
               </div>
               
               <div className="relative group">
-                <div className="flex items-center cursor-pointer">
+                <button 
+                  className="flex items-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 rounded-xl p-2 min-h-[44px]"
+                  aria-label="User menu"
+                  aria-expanded="false"
+                  aria-haspopup="true"
+                >
                   <div className="hidden lg:block mr-3 text-right">
                     <p className="text-sm font-medium text-gray-900">{currentUser?.name || 'Guest'}</p>
-                    <p className="text-xs text-gray-500 capitalize">{currentUser?.role || 'No Role'} • Tammy's Store</p>
+                    <p className="text-xs text-gray-500 capitalize">{currentUser?.role || 'No Role'} • {currentTenant?.name || 'Oklok'}</p>
                   </div>
-                  <div className="h-8 w-8 lg:h-10 lg:w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm lg:text-base">
+                  <div 
+                    className="h-8 w-8 lg:h-10 lg:w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm lg:text-base"
+                    aria-hidden="true"
+                  >
                     {currentUser?.name?.charAt(0) || 'G'}
                   </div>
-                </div>
+                </button>
                 
                 {/* Dropdown Menu */}
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50">
+                <div 
+                  className="absolute right-0 mt-2 w-48 oklok-card opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50"
+                  role="menu"
+                  aria-orientation="vertical"
+                >
                   <div className="py-2">
-                    <div className="px-4 py-2 border-b border-gray-100">
+                    <div className="px-4 py-3 border-b border-gray-100">
                       <p className="text-sm font-medium text-gray-900">{currentUser?.name}</p>
                       <p className="text-xs text-gray-500">{currentUser?.email || 'No email'}</p>
                     </div>
                     <button
                       onClick={logout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors min-h-[44px] focus:outline-none focus:bg-red-50"
+                      role="menuitem"
+                      aria-label="Sign out of your account"
                     >
                       Sign Out
                     </button>
@@ -136,16 +160,24 @@ export default function Navigation() {
             </div>
             
             <div className="flex items-center md:hidden">
-              <button className="p-2 text-gray-400 hover:text-gray-500 relative mr-2">
-                <BellIcon className="h-5 w-5" />
-                <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
+              <button 
+                className="p-2 text-gray-400 hover:text-gray-500 relative mr-2 min-h-[44px] min-w-[44px] rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                aria-label="View notifications"
+              >
+                <BellIcon className="h-5 w-5" aria-hidden="true" />
+                <span 
+                  className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"
+                  aria-label="You have new notifications"
+                ></span>
               </button>
               
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                className="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-gray-500 hover:bg-gray-100 min-h-[44px] min-w-[44px] transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={mobileMenuOpen}
               >
-                <MenuIcon className="h-6 w-6" />
+                <MenuIcon className="h-6 w-6" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -153,8 +185,8 @@ export default function Navigation() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-200">
-          <div className="pt-2 pb-3 space-y-1 bg-white">
+        <div className="md:hidden border-t border-gray-200/50 animate-slide-up">
+          <div className="pt-2 pb-3 space-y-1 oklok-glass">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -162,22 +194,27 @@ export default function Navigation() {
                   key={item.name}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-colors ${
+                  className={`block mx-3 px-4 py-3 border-l-4 text-base font-medium transition-all duration-200 rounded-r-xl min-h-[44px] ${
                     isActive
                       ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
                       : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
                   }`}
+                  aria-current={isActive ? 'page' : undefined}
+                  aria-label={`Navigate to ${item.name}`}
                 >
                   <div className="flex items-center">
-                    <item.icon className="w-5 h-5 mr-3" />
+                    <item.icon className="w-5 h-5 mr-3" aria-hidden="true" />
                     {item.name}
                   </div>
                 </Link>
               );
             })}
-            <div className="border-t border-gray-200 pt-3 mt-3">
-              <div className="flex items-center px-3 py-2">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium">
+            <div className="border-t border-gray-200/50 pt-4 mt-4">
+              <div className="flex items-center px-6 py-3">
+                <div 
+                  className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium"
+                  aria-hidden="true"
+                >
                   {currentUser?.name?.charAt(0) || 'G'}
                 </div>
                 <div className="ml-3 flex-1">
@@ -185,10 +222,11 @@ export default function Navigation() {
                   <p className="text-sm text-gray-500 capitalize">{currentUser?.role || 'No Role'}</p>
                 </div>
               </div>
-              <div className="px-3 py-2">
+              <div className="px-6 py-2">
                 <button
                   onClick={logout}
-                  className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-colors min-h-[44px] focus:outline-none focus:bg-red-50 focus:ring-2 focus:ring-red-500/20"
+                  aria-label="Sign out of your account"
                 >
                   Sign Out
                 </button>

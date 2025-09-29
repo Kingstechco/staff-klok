@@ -5,6 +5,8 @@ import Navigation from "@/components/Navigation";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
 import { ScheduleProvider } from "@/contexts/ScheduleContext";
+import { ToastProvider } from "@/contexts/ToastContext";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,16 +28,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-gray-50`}>
-        <AuthProvider>
-          <TimeTrackingProvider>
-            <ScheduleProvider>
-              <Navigation />
-              <main className="min-h-screen">
-                {children}
-              </main>
-            </ScheduleProvider>
-          </TimeTrackingProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <ToastProvider>
+            <AuthProvider>
+              <TimeTrackingProvider>
+                <ScheduleProvider>
+                  <Navigation />
+                  <main className="min-h-screen">
+                    {children}
+                  </main>
+                </ScheduleProvider>
+              </TimeTrackingProvider>
+            </AuthProvider>
+          </ToastProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

@@ -95,6 +95,12 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     headers.Authorization = `Bearer ${token}`;
   }
 
+  // Add tenant context for development mode
+  // Use test tenant subdomain for localhost development
+  if (typeof window !== 'undefined' && window.location.hostname.includes('localhost')) {
+    headers['X-Tenant-ID'] = 'test';
+  }
+
   const response = await fetch(url, {
     ...options,
     headers,

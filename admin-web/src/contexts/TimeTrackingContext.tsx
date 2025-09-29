@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { timeEntriesAPI, dashboardAPI } from '../utils/api';
 
 export interface TimeEntry {
@@ -44,7 +44,7 @@ export interface TimeTrackingContextType {
   editEntry: (entryId: string, updates: Partial<TimeEntry>) => Promise<boolean>;
   deleteEntry: (entryId: string) => Promise<boolean>;
   exportData: (format: 'csv' | 'excel', dateRange?: { start: Date; end: Date }) => Promise<boolean>;
-  refreshEntries: () => Promise<void>;
+  refreshEntries: (userId?: string) => Promise<void>;
   loading: boolean;
 }
 
@@ -55,12 +55,7 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
   const [currentEntry, setCurrentEntry] = useState<TimeEntry | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Load entries on mount
-    refreshEntries();
-  }, []);
-
-  const refreshEntries = async (userId?: string) => {
+  const refreshEntries = useCallback(async (userId?: string) => {
     try {
       setLoading(true);
       const response = await timeEntriesAPI.getEntries();
@@ -80,19 +75,24 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
       }));
       setTimeEntries(apiEntries);
       
-      // Find current active entry for the specified user
-      if (userId) {
-        const activeEntry = apiEntries.find(
-          (entry: any) => entry.userId === userId && !entry.clockOut && entry.status === 'active'
-        );
-        setCurrentEntry(activeEntry || null);
-        
-        // Sync localStorage for consistency
-        if (activeEntry) {
-          localStorage.setItem('currentEntry', JSON.stringify(activeEntry));
-        } else {
-          localStorage.removeItem('currentEntry');
-        }
+      // Always check for active entries to sync current state
+      // Look for entries without clockOut and with active status
+      const activeEntry = apiEntries.find(
+        (entry: any) => !entry.clockOut && entry.status === 'active'
+      );
+      
+      // If userId specified, ensure the active entry belongs to that user
+      const currentActiveEntry = userId && activeEntry ? 
+        (activeEntry.userId === userId ? activeEntry : null) : 
+        activeEntry;
+      
+      setCurrentEntry(currentActiveEntry || null);
+      
+      // Sync localStorage for consistency
+      if (currentActiveEntry) {
+        localStorage.setItem('currentEntry', JSON.stringify(currentActiveEntry));
+      } else {
+        localStorage.removeItem('currentEntry');
       }
     } catch (error) {
       console.error('Failed to refresh entries:', error);
@@ -100,24 +100,20 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
       const mockEntries: TimeEntry[] = [];
       setTimeEntries(mockEntries);
       
-      // Load from localStorage if available
-      const storedEntry = localStorage.getItem('currentEntry');
-      if (storedEntry && userId) {
-        try {
-          const parsed = JSON.parse(storedEntry);
-          if (parsed.userId === userId) {
-            setCurrentEntry(parsed);
-          }
-        } catch {
-          setCurrentEntry(null);
-        }
-      }
+      // Clear currentEntry state when API fails - don't rely on stale localStorage
+      setCurrentEntry(null);
+      localStorage.removeItem('currentEntry');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const clockIn = async (userId: string, userName: string, location = 'Store-WiFi-Main'): Promise<boolean> => {
+  useEffect(() => {
+    // Load entries on mount
+    refreshEntries();
+  }, [refreshEntries]);
+
+  const clockIn = useCallback(async (userId: string, userName: string, location = 'Store-WiFi-Main'): Promise<boolean> => {
     try {
       setLoading(true);
       const response = await timeEntriesAPI.clockIn({
@@ -154,9 +150,9 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  };
+  }, [refreshEntries]);
 
-  const clockOut = async (userId?: string, notes?: string): Promise<boolean> => {
+  const clockOut = useCallback(async (userId?: string, notes?: string): Promise<boolean> => {
     try {
       setLoading(true);
       const response = await timeEntriesAPI.clockOut({ notes });
@@ -171,13 +167,29 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
         await refreshEntries();
       }
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Clock out error:', error);
+      
+      // Handle specific error cases
+      if (error.message === 'No active clock-in found') {
+        // If no active clock-in, sync the state and refresh entries
+        setCurrentEntry(null);
+        localStorage.removeItem('currentEntry');
+        if (userId) {
+          await refreshEntries(userId);
+        } else {
+          await refreshEntries();
+        }
+        
+        // Re-throw with a user-friendly message
+        throw new Error('You are not currently clocked in. Your session may have expired or you may already be clocked out.');
+      }
+      
       throw error;
     } finally {
       setLoading(false);
     }
-  };
+  }, [refreshEntries]);
 
   const startBreak = async (entryId: string): Promise<boolean> => {
     try {
@@ -207,7 +219,7 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  const getWeeklyStats = (weekOffset = 0): WeeklyStats => {
+  const getWeeklyStats = useCallback((weekOffset = 0): WeeklyStats => {
     const now = new Date();
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay() - (weekOffset * 7));
@@ -239,16 +251,16 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
       averageHours: Math.round(averageHours * 100) / 100,
       laborCost: Math.round(laborCost * 100) / 100,
     };
-  };
+  }, [timeEntries]);
 
-  const getUserEntries = (userId: string, days = 30): TimeEntry[] => {
+  const getUserEntries = useCallback((userId: string, days = 30): TimeEntry[] => {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
     
     return timeEntries.filter(entry => 
       entry.userId === userId && entry.clockIn >= cutoffDate
     );
-  };
+  }, [timeEntries]);
 
   const getAllEntriesInRange = (startDate: Date, endDate: Date): TimeEntry[] => {
     return timeEntries.filter(entry => 
@@ -327,7 +339,7 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  const value: TimeTrackingContextType = {
+  const value: TimeTrackingContextType = useMemo(() => ({
     timeEntries,
     currentEntry,
     clockIn,
@@ -343,7 +355,23 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
     exportData,
     refreshEntries,
     loading,
-  };
+  }), [
+    timeEntries,
+    currentEntry,
+    clockIn,
+    clockOut,
+    startBreak,
+    endBreak,
+    getWeeklyStats,
+    getUserEntries,
+    getAllEntriesInRange,
+    approveEntry,
+    editEntry,
+    deleteEntry,
+    exportData,
+    refreshEntries,
+    loading,
+  ]);
 
   return (
     <TimeTrackingContext.Provider value={value}>
