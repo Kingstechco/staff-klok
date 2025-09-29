@@ -12,6 +12,7 @@ export default function ClockIn() {
   const [error, setError] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [wifiStatus] = useState('Store-WiFi-Main');
+  const [showClockOutConfirm, setShowClockOutConfirm] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -56,10 +57,22 @@ export default function ClockIn() {
     if (!currentUser) return;
 
     if (isClockedIn && currentEntry) {
-      clockOut(currentUser.id);
+      // Show confirmation dialog for clock out
+      setShowClockOutConfirm(true);
     } else {
       clockIn(currentUser.id, currentUser.name, wifiStatus);
     }
+  };
+
+  const confirmClockOut = () => {
+    if (currentUser) {
+      clockOut(currentUser.id);
+    }
+    setShowClockOutConfirm(false);
+  };
+
+  const cancelClockOut = () => {
+    setShowClockOutConfirm(false);
   };
 
   // Quick PIN handler removed - production ready
@@ -232,6 +245,50 @@ export default function ClockIn() {
             </button>
           </div>
 
+          {/* Clock Out Confirmation Dialog */}
+          {showClockOutConfirm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-in">
+                <div className="text-center mb-6">
+                  <div className="mx-auto h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+                    <ExclamationTriangleIcon className="h-6 w-6 text-amber-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirm Clock Out</h3>
+                  <p className="text-gray-600">
+                    Are you sure you want to clock out? This will end your current work session.
+                  </p>
+                  {currentEntry && (
+                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600">
+                        Started at: {new Date(currentEntry.clockIn).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Duration: {Math.round((new Date().getTime() - new Date(currentEntry.clockIn).getTime()) / (1000 * 60))} minutes
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={cancelClockOut}
+                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmClockOut}
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-lg hover:from-red-600 hover:to-pink-700 transition-all font-medium"
+                  >
+                    Clock Out
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Weekly Progress */}
           <div className="chart-container animate-in p-4 sm:p-6" style={{ animationDelay: '400ms' }}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Weekly Progress</h3>
@@ -308,6 +365,14 @@ function LogoutIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+    </svg>
+  );
+}
+
+function ExclamationTriangleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
     </svg>
   );
 }

@@ -25,6 +25,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response): Promis
 
     // Get today's stats (admin/manager only)
     const todayEntries = await TimeEntry.find({
+      tenantId: req.user.tenantId,
       clockIn: { $gte: today, $lt: tomorrow }
     }).populate('userId', 'name department');
 
@@ -38,6 +39,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response): Promis
     startOfWeek.setDate(today.getDate() - today.getDay());
     
     const weeklyEntries = await TimeEntry.find({
+      tenantId: req.user.tenantId,
       clockIn: { $gte: startOfWeek, $lt: tomorrow }
     }).populate('userId', 'name department');
 
@@ -51,18 +53,23 @@ export const getDashboardStats = async (req: AuthRequest, res: Response): Promis
 
     // Get pending approvals (admin/manager only)
     const pendingApprovals = await TimeEntry.countDocuments({
+      tenantId: req.user.tenantId,
       isApproved: { $ne: true },
       clockOut: { $exists: true }
     });
 
     // Get today's schedule (admin/manager only)
     const todayShifts = await Shift.find({
+      tenantId: req.user.tenantId,
       date: { $gte: today, $lt: tomorrow },
       status: { $in: ['scheduled', 'confirmed'] }
     }).populate('userId', 'name department');
 
     // Active employees count (admin/manager only)
-    const activeEmployees = await User.countDocuments({ isActive: true });
+    const activeEmployees = await User.countDocuments({ 
+      tenantId: req.user.tenantId,
+      isActive: true 
+    });
 
     res.json({
       today: {
@@ -103,12 +110,14 @@ export const getUserDashboard = async (req: AuthRequest, res: Response): Promise
 
     // Get current active entry
     const currentEntry = await TimeEntry.findOne({
+      tenantId: req.user.tenantId,
       userId,
       status: 'active'
     });
 
     // Get today's completed entries
     const todayEntries = await TimeEntry.find({
+      tenantId: req.user.tenantId,
       userId,
       clockIn: { $gte: today, $lt: tomorrow },
       clockOut: { $exists: true }
@@ -121,6 +130,7 @@ export const getUserDashboard = async (req: AuthRequest, res: Response): Promise
     startOfWeek.setDate(today.getDate() - today.getDay());
     
     const weeklyEntries = await TimeEntry.find({
+      tenantId: req.user.tenantId,
       userId,
       clockIn: { $gte: startOfWeek, $lt: tomorrow },
       clockOut: { $exists: true }
@@ -131,6 +141,7 @@ export const getUserDashboard = async (req: AuthRequest, res: Response): Promise
 
     // Get upcoming shifts
     const upcomingShifts = await Shift.find({
+      tenantId: req.user.tenantId,
       userId,
       date: { $gte: today },
       status: { $in: ['scheduled', 'confirmed'] }

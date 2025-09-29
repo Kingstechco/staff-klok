@@ -13,12 +13,17 @@ export const getAnalytics = async (req: AuthRequest, res: Response): Promise<voi
     const end = endDate ? new Date(endDate as string) : new Date();
     
     const filter: any = {
+      tenantId: req.user?.tenantId,
       clockIn: { $gte: start, $lte: end }
     };
     
     // Filter by department if specified
     if (department) {
-      const departmentUsers = await User.find({ department, isActive: true }).select('_id');
+      const departmentUsers = await User.find({ 
+        tenantId: req.user?.tenantId,
+        department, 
+        isActive: true 
+      }).select('_id');
       filter.userId = { $in: departmentUsers.map(u => u._id) };
     }
     
@@ -126,11 +131,13 @@ export const getAnalytics = async (req: AuthRequest, res: Response): Promise<voi
     
     // Calculate attendance rate
     const scheduledShifts = await Shift.countDocuments({
+      tenantId: req.user?.tenantId,
       date: { $gte: start, $lte: end },
       status: { $in: ['scheduled', 'confirmed', 'completed'] }
     });
     
     const completedShifts = await Shift.countDocuments({
+      tenantId: req.user?.tenantId,
       date: { $gte: start, $lte: end },
       status: 'completed'
     });
@@ -163,6 +170,7 @@ export const getPayrollAnalytics = async (req: AuthRequest, res: Response): Prom
     const end = endDate ? new Date(endDate as string) : new Date();
     
     const entries = await TimeEntry.find({
+      tenantId: req.user?.tenantId,
       clockIn: { $gte: start, $lte: end },
       clockOut: { $exists: true }
     }).populate('userId', 'name department hourlyRate');
