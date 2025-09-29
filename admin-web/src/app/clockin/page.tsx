@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTimeTracking } from '@/contexts/TimeTrackingContext';
+import OklokLogo from '@/components/ui/OklokLogo';
 
 export default function ClockIn() {
   const { login, currentUser, logout } = useAuth();
@@ -82,11 +83,11 @@ export default function ClockIn() {
       <div className="min-h-screen flex flex-col justify-center px-3 sm:px-6 lg:px-8 py-6 sm:py-12">
         <div className="w-full max-w-md mx-auto">
           <div className="text-center mb-6 sm:mb-8">
-            <div className="mx-auto h-12 w-12 sm:h-16 sm:w-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4">
-              <ClockIcon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+            <div className="flex justify-center mb-6">
+              <OklokLogo size="lg" />
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Staff Clock-In</h2>
-            <p className="mt-2 text-gray-600">Enter your staff ID to continue</p>
+            <p className="mt-2 text-gray-600">Enter your PIN to continue</p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">

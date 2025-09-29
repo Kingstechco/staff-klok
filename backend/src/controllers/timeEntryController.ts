@@ -12,6 +12,7 @@ export const clockIn = async (req: AuthRequest, res: Response): Promise<void> =>
     
     // Check if user already has an active time entry
     const activeEntry = await TimeEntry.findOne({
+      tenantId: req.user.tenantId || req.user._id,
       userId: req.user._id,
       status: 'active'
     });
@@ -24,11 +25,15 @@ export const clockIn = async (req: AuthRequest, res: Response): Promise<void> =>
     const { location, notes } = req.body;
     
     const timeEntry = new TimeEntry({
+      tenantId: req.user.tenantId || req.user._id, // Use tenantId from user or fallback to user ID
       userId: req.user._id,
       clockIn: new Date(),
       location,
       notes,
-      status: 'active'
+      status: 'active',
+      approvalStatus: 'pending',
+      approvals: [],
+      requiresApproval: false
     });
     
     await timeEntry.save();
@@ -48,6 +53,7 @@ export const clockOut = async (req: AuthRequest, res: Response): Promise<void> =
     }
     
     const activeEntry = await TimeEntry.findOne({
+      tenantId: req.user.tenantId || req.user._id,
       userId: req.user._id,
       status: 'active'
     });
@@ -79,6 +85,7 @@ export const startBreak = async (req: AuthRequest, res: Response): Promise<void>
     }
     
     const activeEntry = await TimeEntry.findOne({
+      tenantId: req.user.tenantId || req.user._id,
       userId: req.user._id,
       status: 'active'
     });
@@ -111,6 +118,7 @@ export const endBreak = async (req: AuthRequest, res: Response): Promise<void> =
     }
     
     const activeEntry = await TimeEntry.findOne({
+      tenantId: req.user.tenantId || req.user._id,
       userId: req.user._id,
       status: 'active'
     });

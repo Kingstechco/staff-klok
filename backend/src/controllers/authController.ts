@@ -4,9 +4,14 @@ import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import logger from '../utils/logger';
 
-const generateToken = (id: string): string => {
+const generateToken = (id: string, tenantId?: string): string => {
+  const payload: any = { id };
+  if (tenantId) {
+    payload.tenantId = tenantId;
+  }
+  
   return jwt.sign(
-    { id },
+    payload,
     process.env.JWT_SECRET || 'your-secret-key',
     { expiresIn: process.env.JWT_EXPIRE || '7d' } as jwt.SignOptions
   );
@@ -36,7 +41,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     user.lastLogin = new Date();
     await user.save();
     
-    const token = generateToken((user._id as any).toString());
+    const token = generateToken((user._id as any).toString(), (user.tenantId as any)?.toString());
     
     res.json({
       token,
@@ -75,7 +80,7 @@ export const quickClockIn = async (req: Request, res: Response): Promise<void> =
       return;
     }
     
-    const token = generateToken((authenticatedUser._id as any).toString());
+    const token = generateToken((authenticatedUser._id as any).toString(), (authenticatedUser.tenantId as any)?.toString());
     
     res.json({
       token,

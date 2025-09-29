@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import OklokLogo from '@/components/ui/OklokLogo';
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -60,16 +61,19 @@ export default function Navigation() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  {currentTenant?.name || 'Oklok'}
-                </h1>
-                {currentTenant && (
-                  <p className="text-xs text-gray-500 hidden sm:block">
-                    {currentTenant.businessType} • {currentTenant.subscription?.plan || 'trial'}
-                  </p>
+              <Link href="/" className="flex items-center">
+                <OklokLogo size="md" />
+                {currentTenant && currentTenant.name !== 'Oklok' && (
+                  <div className="ml-3 border-l border-gray-300 pl-3">
+                    <h2 className="text-sm font-semibold text-gray-900">
+                      {currentTenant.name}
+                    </h2>
+                    <p className="text-xs text-gray-500 hidden sm:block">
+                      {currentTenant.businessType} • {currentTenant.subscription?.plan || 'trial'}
+                    </p>
+                  </div>
                 )}
-              </div>
+              </Link>
             </div>
             <div className="hidden md:ml-8 md:flex md:space-x-6 lg:space-x-8">
               {navigation.map((item) => {

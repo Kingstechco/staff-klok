@@ -10,7 +10,12 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Oklok - Employee Time Management",
-  description: "Professional staff time tracking and management system for Tammy's Store",
+  description: "Professional staff time tracking and management system",
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
