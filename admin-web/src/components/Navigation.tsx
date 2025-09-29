@@ -62,7 +62,7 @@ export default function Navigation() {
             <div className="flex-shrink-0 flex items-center">
               <div>
                 <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  {currentTenant?.name || 'StaffClock'}
+                  {currentTenant?.name || 'Oklok'}
                 </h1>
                 {currentTenant && (
                   <p className="text-xs text-gray-500 hidden sm:block">

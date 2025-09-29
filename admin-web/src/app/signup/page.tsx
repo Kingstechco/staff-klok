@@ -167,7 +167,7 @@ const TenantSignup: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="mt-6 text-2xl font-bold text-gray-900">Welcome to StaffClock!</h2>
+              <h2 className="mt-6 text-2xl font-bold text-gray-900">Welcome to Oklok!</h2>
               <p className="mt-2 text-sm text-gray-600">
                 Your organization has been created successfully.
               </p>
@@ -294,7 +294,7 @@ const TenantSignup: React.FC = () => {
                       placeholder="yourcompany"
                     />
                     <span className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                      .staffclock.com
+                      .oklok.com
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-gray-500">This will be your login URL</p>

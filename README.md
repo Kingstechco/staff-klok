@@ -1,4 +1,4 @@
-# StaffClock Pro - Complete Time Tracking System
+# Oklok - Complete Time Tracking System
 
 A comprehensive staff time tracking and management system with location-based clock-in, role-based access control, and advanced reporting capabilities.
 
@@ -101,9 +101,9 @@ staff-klok/
 
 The system comes with pre-configured demo users:
 
-- **Admin**: admin@staffclock.com / PIN: 1234
-- **Manager**: manager@staffclock.com / PIN: 2345
-- **Staff**: john.doe@staffclock.com / PIN: 3456
+- **Admin**: admin@oklok.com / PIN: 1234
+- **Manager**: manager@oklok.com / PIN: 2345
+- **Staff**: john.doe@oklok.com / PIN: 3456
 - **Contractors**: Use invitation system for registration
 
 ## 🔐 Security Features
@@ -168,7 +168,7 @@ ALLOWED_IPS=192.168.1.0/24,10.0.0.0/24
 ```env
 NODE_ENV=development
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/staffclock
+MONGODB_URI=mongodb://localhost:27017/oklok
 JWT_SECRET=your-secure-secret-key
 FRONTEND_URL=http://localhost:3000
 ALLOWED_SSIDS=YourWiFiNetwork
@@ -178,7 +178,7 @@ ALLOWED_IPS=192.168.1.0/24
 **Admin Web (.env.local)**
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000
-NEXT_PUBLIC_APP_NAME=StaffClock Pro
+NEXT_PUBLIC_APP_NAME=Oklok
 ```
 
 ## 📋 Testing
@@ -327,4 +327,4 @@ For support and questions:
 
 ---
 
-**StaffClock Pro** - Professional time tracking made simple.
+**Oklok** - Professional time tracking made simple.

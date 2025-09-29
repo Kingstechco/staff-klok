@@ -3,7 +3,7 @@ import logger from '../utils/logger';
 
 const connectDB = async (): Promise<void> => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/staffclock', {
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/oklok', {
       serverSelectionTimeoutMS: 5000,
     });
     

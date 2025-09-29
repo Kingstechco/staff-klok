@@ -1,16 +1,16 @@
 // MongoDB initialization script
 // This script runs when the MongoDB container starts for the first time
 
-db = db.getSiblingDB('staffclock');
+db = db.getSiblingDB('oklok');
 
 // Create the main user for the application
 db.createUser({
-  user: 'staffclock_user',
-  pwd: 'staffclock_password',
+  user: 'oklok_user',
+  pwd: 'oklok_password',
   roles: [
     {
       role: 'readWrite',
-      db: 'staffclock'
+      db: 'oklok'
     }
   ]
 });

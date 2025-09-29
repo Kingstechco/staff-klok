@@ -1,7 +1,7 @@
 {
-  "name": "staffclock-backend",
+  "name": "oklok-backend",
   "version": "1.0.0",
-  "description": "Backend API for StaffClock Pro",
+  "description": "Backend API for Oklok",
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon src/server.ts",

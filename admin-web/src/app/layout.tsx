@@ -9,7 +9,7 @@ import { ScheduleProvider } from "@/contexts/ScheduleContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "StaffClock Pro - Employee Time Management",
+  title: "Oklok - Employee Time Management",
   description: "Professional staff time tracking and management system for Tammy's Store",
 };
 

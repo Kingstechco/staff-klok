@@ -4,19 +4,19 @@ services:
   # MongoDB Database
   mongodb:
     image: mongo:7.0
-    container_name: staffclock-mongo
+    container_name: oklok-mongo
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-admin123}
-      MONGO_INITDB_DATABASE: staffclock
+      MONGO_INITDB_DATABASE: oklok
     volumes:
       - mongodb_data:/data/db
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     ports:
       - "27017:27017"
     networks:
-      - staffclock-network
+      - oklok-network
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 30s
@@ -26,12 +26,12 @@ services:
   # Backend API
   api:
     build: .
-    container_name: staffclock-api
+    container_name: oklok-api
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3001
-      MONGODB_URI: mongodb://mongodb:27017/staffclock
+      MONGODB_URI: mongodb://mongodb:27017/oklok
       JWT_SECRET: ${JWT_SECRET:-your-secret-key}
       JWT_EXPIRE: ${JWT_EXPIRE:-7d}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
@@ -51,7 +51,7 @@ services:
       mongodb:
         condition: service_healthy
     networks:
-      - staffclock-network
+      - oklok-network
     healthcheck:
       test: ["CMD", "node", "-e", "http.get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
       interval: 30s
@@ -61,7 +61,7 @@ services:
   # Nginx Reverse Proxy (Optional)
   nginx:
     image: nginx:alpine
-    container_name: staffclock-nginx
+    container_name: oklok-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -72,7 +72,7 @@ services:
     depends_on:
       - api
     networks:
-      - staffclock-network
+      - oklok-network
     profiles:
       - production
 
@@ -87,5 +87,5 @@ volumes:
     driver: local
 
 networks:
-  staffclock-network:
+  oklok-network:
     driver: bridge
