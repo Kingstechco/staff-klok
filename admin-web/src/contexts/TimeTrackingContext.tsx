@@ -141,8 +141,15 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
       // Refresh entries from API with userId
       await refreshEntries(userId);
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Clock in error:', error);
+      
+      // Handle specific error cases
+      if (error.message === 'Already clocked in') {
+        // Try to refresh entries to get current state
+        await refreshEntries(userId);
+      }
+      
       throw error;
     } finally {
       setLoading(false);

@@ -14,11 +14,18 @@ export default function ClockIn() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [wifiStatus] = useState('Store-WiFi-Main');
   const [showClockOutConfirm, setShowClockOutConfirm] = useState(false);
+  const [showError, setShowError] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
+    
+    // Clear any stale state on mount
+    setPin('');
+    setError('');
+    setShowError(null);
+    
     return () => clearInterval(timer);
   }, []);
 
@@ -54,22 +61,40 @@ export default function ClockIn() {
     }
   };
 
-  const handleClockToggle = () => {
+  const handleClockToggle = async () => {
     if (!currentUser) return;
 
     if (isClockedIn && currentEntry) {
       // Show confirmation dialog for clock out
       setShowClockOutConfirm(true);
     } else {
-      clockIn(currentUser.id, currentUser.name, wifiStatus);
+      try {
+        await clockIn(currentUser.id, currentUser.name, wifiStatus);
+      } catch (error: any) {
+        // Show user-friendly error messages
+        if (error.message === 'Already clocked in') {
+          setShowError('You are already clocked in. Please clock out first before starting a new session.');
+        } else {
+          setShowError(`Failed to clock in: ${error.message}`);
+        }
+        setTimeout(() => setShowError(null), 5000); // Auto-hide after 5 seconds
+      }
     }
   };
 
-  const confirmClockOut = () => {
+  const confirmClockOut = async () => {
     if (currentUser) {
-      clockOut(currentUser.id);
+      try {
+        await clockOut(currentUser.id);
+        setShowClockOutConfirm(false);
+      } catch (error: any) {
+        setShowError(`Failed to clock out: ${error.message}`);
+        setTimeout(() => setShowError(null), 5000);
+        setShowClockOutConfirm(false);
+      }
+    } else {
+      setShowClockOutConfirm(false);
     }
-    setShowClockOutConfirm(false);
   };
 
   const cancelClockOut = () => {
@@ -100,27 +125,36 @@ export default function ClockIn() {
             <form className="space-y-6" onSubmit={handlePinSubmit}>
               <div>
                 <label htmlFor="pin" className="block text-sm font-medium text-gray-700 mb-2">
-                  Enter Your PIN
+                  Enter Your PIN {pin.length > 0 && <span className="text-xs text-gray-500">({pin.length}/4)</span>}
                 </label>
                 <input
                   id="pin"
                   name="pin"
                   type="password"
                   value={pin}
-                  onChange={(e) => setPin(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                    setPin(value);
+                  }}
                   maxLength={6}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-base text-center text-lg tracking-widest"
                   placeholder="••••"
+                  autoComplete="off"
+                  autoFocus
                 />
               </div>
 
               <button
                 type="submit"
-                disabled={isLoading || pin.length < 4}
-                className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                disabled={isLoading || pin.trim().length < 4}
+                className={`w-full py-3 px-4 font-medium rounded-xl transition-all duration-200 ${
+                  isLoading || pin.trim().length < 4
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg transform hover:-translate-y-0.5'
+                }`}
               >
-                {isLoading ? 'Signing In...' : 'Sign In'}
+                {isLoading ? 'Signing In...' : `Sign In${pin.trim().length < 4 ? ` (${4 - pin.trim().length} more digits)` : ''}`}
               </button>
             </form>
 
@@ -168,6 +202,33 @@ export default function ClockIn() {
               </div>
             </div>
           </div>
+
+          {/* Error Toast */}
+          {showError && (
+            <div className="mb-6 animate-in">
+              <div className="max-w-md mx-auto bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <ExclamationTriangleIcon className="h-5 w-5 text-red-400" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-red-800">{showError}</p>
+                  </div>
+                  <div className="ml-auto pl-3">
+                    <button
+                      onClick={() => setShowError(null)}
+                      className="inline-flex text-red-400 hover:text-red-600"
+                    >
+                      <span className="sr-only">Dismiss</span>
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Status Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
