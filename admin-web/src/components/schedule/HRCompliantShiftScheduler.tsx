@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { getAuthToken } from '@/utils/api';
 
 interface User {
   _id: string;
@@ -75,7 +76,7 @@ const HRCompliantShiftScheduler: React.FC<HRCompliantShiftSchedulerProps> = ({
   onShiftUpdated,
   existingShifts
 }) => {
-  const { token } = useAuth();
+  const { currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [employmentTypes, setEmploymentTypes] = useState<EmploymentType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -97,7 +98,7 @@ const HRCompliantShiftScheduler: React.FC<HRCompliantShiftSchedulerProps> = ({
   useEffect(() => {
     fetchUsers();
     fetchEmploymentTypes();
-  }, [token]);
+  }, [currentUser]);
 
   useEffect(() => {
     if (shiftForm.userId && shiftForm.startTime && shiftForm.endTime) {
@@ -111,7 +112,7 @@ const HRCompliantShiftScheduler: React.FC<HRCompliantShiftSchedulerProps> = ({
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users?employmentStatus=active`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${getAuthToken()}`,
           'Content-Type': 'application/json'
         }
       });
@@ -129,7 +130,7 @@ const HRCompliantShiftScheduler: React.FC<HRCompliantShiftSchedulerProps> = ({
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/hr/employment-types`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${getAuthToken()}`,
           'Content-Type': 'application/json'
         }
       });
@@ -160,7 +161,7 @@ const HRCompliantShiftScheduler: React.FC<HRCompliantShiftSchedulerProps> = ({
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/hr/validate-shift-scheduling`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${getAuthToken()}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -240,7 +241,7 @@ const HRCompliantShiftScheduler: React.FC<HRCompliantShiftSchedulerProps> = ({
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule/shifts`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${getAuthToken()}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(newShift)
@@ -494,7 +495,7 @@ const HRCompliantShiftScheduler: React.FC<HRCompliantShiftSchedulerProps> = ({
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={loading || validating || (validation && !validation.canSchedule)}
+            disabled={loading || validating || (validation ? !validation.canSchedule : false)}
             className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Creating...' : 'Schedule Shift'}

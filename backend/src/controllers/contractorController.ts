@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import { AuthRequest } from '../middleware/auth';
 import { TenantRequest } from '../middleware/tenantResolver';
 import User from '../models/User';
@@ -18,8 +19,12 @@ const sendEmail = async (options: any) => {
 export class ContractorController {
   
   // Create contractor invitation
-  static async inviteContractor(req: AuthRequest, res: Response) {
+  static async inviteContractor(req: AuthRequest, res: Response): Promise<Response | void> {
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
       const {
         name,
         email,
@@ -129,12 +134,12 @@ export class ContractorController {
 
     } catch (error) {
       logger.error('Error inviting contractor:', error);
-      res.status(500).json({ error: 'Failed to invite contractor' });
+      return res.status(500).json({ error: 'Failed to invite contractor' });
     }
   }
 
   // Complete contractor setup (by contractor)
-  static async completeSetup(req: Request, res: Response) {
+  static async completeSetup(req: Request, res: Response): Promise<Response | void> {
     try {
       const { token } = req.params;
       const {
@@ -205,7 +210,7 @@ export class ContractorController {
           role: contractor.role
         },
         process.env.JWT_SECRET!,
-        { expiresIn: process.env.JWT_EXPIRE || '7d' }
+        { expiresIn: '7d' }
       );
 
       res.json({
@@ -228,8 +233,12 @@ export class ContractorController {
   }
 
   // Get pending contractor approvals (admin only)
-  static async getPendingApprovals(req: AuthRequest, res: Response) {
+  static async getPendingApprovals(req: AuthRequest, res: Response): Promise<Response | void> {
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
       const contractors = await User.find({
         tenantId: req.user.tenantId,
         role: 'contractor',
@@ -255,13 +264,17 @@ export class ContractorController {
 
     } catch (error) {
       logger.error('Error fetching pending approvals:', error);
-      res.status(500).json({ error: 'Failed to fetch pending approvals' });
+      return res.status(500).json({ error: 'Failed to fetch pending approvals' });
     }
   }
 
   // Approve/activate contractor (admin only)
-  static async approveContractor(req: AuthRequest, res: Response) {
+  static async approveContractor(req: AuthRequest, res: Response): Promise<Response | void> {
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
       const { contractorId } = req.params;
       const { approved, overrideSettings, rejectionReason } = req.body;
 
@@ -280,7 +293,7 @@ export class ContractorController {
         // Approve contractor
         contractor.isActive = true;
         contractor.contractorInfo!.registrationStatus = 'active';
-        contractor.lastModifiedBy = req.user._id;
+        contractor.lastModifiedBy = req.user._id as mongoose.Types.ObjectId;
 
         // Apply any admin overrides
         if (overrideSettings && contractor.contractorInfo?.autoClocking) {
@@ -321,7 +334,7 @@ export class ContractorController {
       } else {
         // Reject contractor
         contractor.contractorInfo!.registrationStatus = 'inactive';
-        contractor.lastModifiedBy = req.user._id;
+        contractor.lastModifiedBy = req.user._id as mongoose.Types.ObjectId;
         await contractor.save();
 
         // Send rejection notification
@@ -357,8 +370,12 @@ export class ContractorController {
   }
 
   // Get contractor settings
-  static async getContractorSettings(req: AuthRequest, res: Response) {
+  static async getContractorSettings(req: AuthRequest, res: Response): Promise<Response | void> {
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
       const contractor = await User.findOne({
         _id: req.user._id,
         role: 'contractor',
@@ -377,13 +394,17 @@ export class ContractorController {
 
     } catch (error) {
       logger.error('Error fetching contractor settings:', error);
-      res.status(500).json({ error: 'Failed to fetch settings' });
+      return res.status(500).json({ error: 'Failed to fetch settings' });
     }
   }
 
   // Update contractor auto-clocking settings
-  static async updateAutoClockingSettings(req: AuthRequest, res: Response) {
+  static async updateAutoClockingSettings(req: AuthRequest, res: Response): Promise<Response | void> {
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
       const { autoClockingSettings } = req.body;
 
       const contractor = await User.findOne({
@@ -401,7 +422,7 @@ export class ContractorController {
           ...contractor.contractorInfo.autoClocking,
           ...autoClockingSettings
         };
-        contractor.lastModifiedBy = req.user._id;
+        contractor.lastModifiedBy = req.user._id as mongoose.Types.ObjectId;
         await contractor.save();
       }
 
@@ -417,8 +438,12 @@ export class ContractorController {
   }
 
   // Report exception
-  static async reportException(req: AuthRequest, res: Response) {
+  static async reportException(req: AuthRequest, res: Response): Promise<Response | void> {
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
       const {
         date,
         endDate,
@@ -489,8 +514,12 @@ export class ContractorController {
   }
 
   // Get contractor exceptions
-  static async getExceptions(req: AuthRequest, res: Response) {
+  static async getExceptions(req: AuthRequest, res: Response): Promise<Response | void> {
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
       const { startDate, endDate, status } = req.query;
       
       const query: any = {
@@ -643,7 +672,7 @@ export class ContractorController {
         
         // Billing calculations
         billableAmount: entries.reduce((sum, entry) => {
-          const rate = entry.projectId?.billing?.defaultRate || contractor.contractorInfo?.defaultProjectRate || 0;
+          const rate = (entry.projectId as any)?.billing?.defaultRate || contractor.contractorInfo?.defaultProjectRate || 0;
           return sum + ((entry.totalHours || 0) * rate);
         }, 0),
         
@@ -742,11 +771,11 @@ export class ContractorController {
           totalHours: entry.totalHours || 0,
           regularHours: entry.regularHours || 0,
           overtimeHours: entry.overtimeHours || 0,
-          project: entry.projectId?.name || 'No Project',
-          projectCode: entry.projectId?.code || '',
-          client: entry.projectId?.clientName || '',
-          rate: entry.projectId?.billing?.defaultRate || contractor.contractorInfo?.defaultProjectRate || 0,
-          amount: (entry.totalHours || 0) * (entry.projectId?.billing?.defaultRate || contractor.contractorInfo?.defaultProjectRate || 0),
+          project: (entry.projectId as any)?.name || 'No Project',
+          projectCode: (entry.projectId as any)?.code || '',
+          client: (entry.projectId as any)?.clientName || '',
+          rate: (entry.projectId as any)?.billing?.defaultRate || contractor.contractorInfo?.defaultProjectRate || 0,
+          amount: (entry.totalHours || 0) * ((entry.projectId as any)?.billing?.defaultRate || contractor.contractorInfo?.defaultProjectRate || 0),
           description: entry.taskDescription || '',
           status: entry.approvalStatus,
           notes: entry.notes || ''
@@ -754,7 +783,7 @@ export class ContractorController {
         summary: {
           totalHours: entries.reduce((sum, e) => sum + (e.totalHours || 0), 0),
           totalAmount: entries.reduce((sum, e) => {
-            const rate = e.projectId?.billing?.defaultRate || contractor.contractorInfo?.defaultProjectRate || 0;
+            const rate = (e.projectId as any)?.billing?.defaultRate || contractor.contractorInfo?.defaultProjectRate || 0;
             return sum + ((e.totalHours || 0) * rate);
           }, 0)
         }
@@ -788,6 +817,11 @@ export class ContractorController {
    */
   static async bulkApproveTimesheets(req: AuthRequest & TenantRequest, res: Response): Promise<void> {
     try {
+      if (!req.user) {
+        res.status(401).json({ error: 'User not authenticated' });
+        return;
+      }
+
       const { entryIds, approvalNotes, approverType = 'manager' } = req.body;
 
       if (!Array.isArray(entryIds) || entryIds.length === 0) {
@@ -795,6 +829,7 @@ export class ContractorController {
         return;
       }
 
+      const userId = req.user._id;
       const results = await Promise.allSettled(
         entryIds.map(async (entryId: string) => {
           const entry = await TimeEntry.findOne({
@@ -808,7 +843,7 @@ export class ContractorController {
 
           // Add approval record
           entry.approvals.push({
-            approverId: req.user._id,
+            approverId: userId as mongoose.Types.ObjectId,
             approverType: approverType as 'manager' | 'client',
             status: 'approved',
             timestamp: new Date(),
@@ -848,7 +883,6 @@ export class ContractorController {
     try {
       const now = new Date();
       const monthStart = startOfMonth(now);
-      const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
 
       // Get all contractors
       const contractors = await User.find({
@@ -892,15 +926,15 @@ export class ContractorController {
           totalHours: monthlyEntries.reduce((sum, e) => sum + (e.totalHours || 0), 0),
           pendingApprovals: monthlyEntries.filter(e => e.approvalStatus === 'pending').length,
           billableAmount: monthlyEntries.reduce((sum, entry) => {
-            const contractor = contractors.find(c => c._id.toString() === entry.userId._id.toString());
+            const contractor = contractors.find(c => (c._id as mongoose.Types.ObjectId).toString() === (entry.userId as any)._id?.toString());
             const rate = contractor?.contractorInfo?.defaultProjectRate || 0;
             return sum + ((entry.totalHours || 0) * rate);
           }, 0)
         },
         
-        topContractors: await this.getTopContractors(req.tenant._id, monthStart),
+        topContractors: await this.getTopContractors((req.tenant._id as mongoose.Types.ObjectId).toString(), monthStart),
         recentActivity: monthlyEntries.slice(-10).map(entry => ({
-          contractorName: entry.userId.name,
+          contractorName: (entry.userId as any).name,
           date: entry.clockIn,
           hours: entry.totalHours,
           project: entry.projectId,
@@ -986,13 +1020,13 @@ export class ContractorController {
       `Total Amount: $${data.summary.totalAmount.toFixed(2)}`,
       '', // Empty line
       headers.join(','),
-      ...rows.map(row => row.join(','))
+      ...rows.map((row: string[]) => row.join(','))
     ];
 
     return csvContent.join('\n');
   }
 
-  private static async generateTimesheetPDF(data: any): Promise<Buffer> {
+  private static async generateTimesheetPDF(_data: any): Promise<Buffer> {
     // This would integrate with a PDF generation library like puppeteer or pdfkit
     // For now, return a placeholder
     return Buffer.from('PDF generation not implemented yet');

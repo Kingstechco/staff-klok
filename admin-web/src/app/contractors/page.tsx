@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { getAuthToken } from '@/utils/api';
 
 interface Contractor {
   id: string;
@@ -53,7 +54,7 @@ const StatusColors = {
 };
 
 export default function ContractorsPage() {
-  const { user, token } = useAuth();
+  const { currentUser } = useAuth();
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState<PendingContractor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,12 +76,15 @@ export default function ContractorsPage() {
   });
 
   useEffect(() => {
-    fetchContractors();
-    fetchPendingApprovals();
-  }, [token]);
+    if (currentUser) {
+      fetchContractors();
+      fetchPendingApprovals();
+    }
+  }, [currentUser]);
 
   const fetchContractors = async () => {
     try {
+      const token = getAuthToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contractor/contractors`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -102,6 +106,7 @@ export default function ContractorsPage() {
 
   const fetchPendingApprovals = async () => {
     try {
+      const token = getAuthToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contractor/pending-approvals`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -127,6 +132,7 @@ export default function ContractorsPage() {
     setLoading(true);
 
     try {
+      const token = getAuthToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contractor/invite`, {
         method: 'POST',
         headers: {
@@ -170,6 +176,7 @@ export default function ContractorsPage() {
 
   const handleApproveContractor = async (contractorId: string, approved: boolean, rejectionReason?: string) => {
     try {
+      const token = getAuthToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contractor/${contractorId}/approve`, {
         method: 'POST',
         headers: {
@@ -198,6 +205,7 @@ export default function ContractorsPage() {
 
   const toggleAutoClocking = async (contractorId: string, enabled: boolean) => {
     try {
+      const token = getAuthToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contractor/${contractorId}/auto-clock/trigger`, {
         method: 'POST',
         headers: {
@@ -465,7 +473,7 @@ export default function ContractorsPage() {
                       <div>
                         <span className="font-medium">Auto-Clocking Mode:</span>{' '}
                         {contractor.autoClockingSettings?.processingMode ? 
-                          AutoClockingModeLabels[contractor.autoClockingSettings.processingMode] : 'N/A'}
+                          AutoClockingModeLabels[contractor.autoClockingSettings.processingMode as keyof typeof AutoClockingModeLabels] || 'N/A' : 'N/A'}
                       </div>
                     </div>
                   </div>

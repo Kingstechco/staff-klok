@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { getAuthToken } from '@/utils/api';
 
 interface EmploymentType {
   _id: string;
@@ -37,7 +38,7 @@ interface EmploymentType {
 
 const CreateStaffPage = () => {
   const router = useRouter();
-  const { user, token } = useAuth();
+  const { currentUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [employmentTypes, setEmploymentTypes] = useState<EmploymentType[]>([]);
@@ -85,11 +86,14 @@ const CreateStaffPage = () => {
   });
 
   useEffect(() => {
-    fetchEmploymentTypes();
-  }, [token]);
+    if (currentUser) {
+      fetchEmploymentTypes();
+    }
+  }, [currentUser]);
 
   const fetchEmploymentTypes = async () => {
     try {
+      const token = getAuthToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/hr/employment-types`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -175,6 +179,7 @@ const CreateStaffPage = () => {
     setError(null);
 
     try {
+      const token = getAuthToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, {
         method: 'POST',
         headers: {

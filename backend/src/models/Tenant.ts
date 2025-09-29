@@ -402,7 +402,7 @@ TenantSchema.virtual('fullDomain').get(function() {
 // Pre-save hook to set default features based on plan
 TenantSchema.pre('save', function(next) {
   if (this.isNew || this.isModified('subscription.plan')) {
-    this.subscription.features = this.getDefaultFeatures();
+    this.subscription.features = (this as any).getDefaultFeatures();
   }
   next();
 });
@@ -442,8 +442,19 @@ TenantSchema.methods.hasFeature = function(featureName: string): boolean {
 TenantSchema.statics.getBusinessTypeDefaults = function(businessType: BusinessType) {
   const defaults: Record<BusinessType, Partial<ITenant['settings']>> = {
     retail: {
-      workHours: { standardDaily: 8, overtimeThreshold: 8 },
-      breaks: { requireBreaks: true, minimumShiftForBreak: 4 },
+      workHours: { 
+        standardDaily: 8, 
+        standardWeekly: 40, 
+        overtimeThreshold: 8, 
+        workweekStart: 'monday' as const
+      },
+      breaks: { 
+        requireBreaks: true, 
+        minimumShiftForBreak: 4, 
+        breakDuration: 15, 
+        lunchThreshold: 6, 
+        lunchDuration: 30
+      },
       retail: {
         shiftPatterns: ['Opening', 'Mid-Day', 'Closing'],
         peakHours: [
@@ -453,33 +464,88 @@ TenantSchema.statics.getBusinessTypeDefaults = function(businessType: BusinessTy
       }
     },
     restaurant: {
-      workHours: { standardDaily: 8, overtimeThreshold: 8 },
-      breaks: { requireBreaks: true, minimumShiftForBreak: 6 },
+      workHours: { 
+        standardDaily: 8, 
+        standardWeekly: 40, 
+        overtimeThreshold: 8, 
+        workweekStart: 'monday' as const
+      },
+      breaks: { 
+        requireBreaks: true, 
+        minimumShiftForBreak: 6, 
+        breakDuration: 15, 
+        lunchThreshold: 6, 
+        lunchDuration: 30
+      },
       restaurant: {
         tipTracking: true,
-        serviceCharges: false
+        serviceCharges: false,
+        minimumWage: 0
       }
     },
     contractors: {
-      workHours: { standardDaily: 8, overtimeThreshold: 8 },
-      approvals: { requireClientApproval: true },
+      workHours: { 
+        standardDaily: 8, 
+        standardWeekly: 40, 
+        overtimeThreshold: 8, 
+        workweekStart: 'monday' as const
+      },
+      approvals: { 
+        requireManagerApproval: true, 
+        requireClientApproval: true, 
+        allowSelfEdit: false 
+      },
       contractors: {
         requireProjectAssignment: true,
+        allowMultipleProjects: true,
         clientApprovalRequired: true,
         invoiceGeneration: true
       }
     },
     office: {
-      workHours: { standardDaily: 8, standardWeekly: 40 },
-      breaks: { requireBreaks: false }
+      workHours: { 
+        standardDaily: 8, 
+        standardWeekly: 40, 
+        overtimeThreshold: 8, 
+        workweekStart: 'monday' as const
+      },
+      breaks: { 
+        requireBreaks: false, 
+        minimumShiftForBreak: 8, 
+        breakDuration: 15, 
+        lunchThreshold: 6, 
+        lunchDuration: 30
+      }
     },
     healthcare: {
-      workHours: { standardDaily: 12, overtimeThreshold: 12 },
-      breaks: { requireBreaks: true, minimumShiftForBreak: 6 }
+      workHours: { 
+        standardDaily: 12, 
+        standardWeekly: 48, 
+        overtimeThreshold: 12, 
+        workweekStart: 'monday' as const
+      },
+      breaks: { 
+        requireBreaks: true, 
+        minimumShiftForBreak: 6, 
+        breakDuration: 15, 
+        lunchThreshold: 6, 
+        lunchDuration: 30
+      }
     },
     manufacturing: {
-      workHours: { standardDaily: 8, overtimeThreshold: 8 },
-      breaks: { requireBreaks: true, minimumShiftForBreak: 4 }
+      workHours: { 
+        standardDaily: 8, 
+        standardWeekly: 40, 
+        overtimeThreshold: 8, 
+        workweekStart: 'monday' as const
+      },
+      breaks: { 
+        requireBreaks: true, 
+        minimumShiftForBreak: 4, 
+        breakDuration: 15, 
+        lunchThreshold: 6, 
+        lunchDuration: 30
+      }
     }
   };
   

@@ -414,8 +414,8 @@ export class AutoClockingService {
   public getHealthStatus(): { status: string; jobs: any[] } {
     const jobStatuses = Array.from(this.jobs.entries()).map(([name, job]) => ({
       name,
-      running: job.running || false,
-      scheduled: job.scheduled || false
+      running: (job as any).running || false,
+      scheduled: (job as any).scheduled || false
     }));
 
     const allRunning = jobStatuses.every(job => job.running);

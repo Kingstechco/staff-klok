@@ -75,7 +75,7 @@ export class WorkHourRegulationService {
       throw new Error('User or employment type not found');
     }
 
-    const employmentType = user.employmentTypeId as IEmploymentType;
+    const employmentType = user.employmentTypeId as unknown as IEmploymentType;
     const shiftHours = differenceInHours(clockOut, clockIn) - (breakDuration / 60);
     
     const validation: WorkHourValidation = {
@@ -204,7 +204,7 @@ export class WorkHourRegulationService {
       throw new Error('User or employment type not found');
     }
 
-    const employmentType = user.employmentTypeId as IEmploymentType;
+    const employmentType = user.employmentTypeId as unknown as IEmploymentType;
     const shiftHours = differenceInHours(proposedEndTime, proposedStartTime);
     
     const validation: ShiftValidation = {
@@ -316,7 +316,7 @@ export class WorkHourRegulationService {
       throw new Error('User or employment type not found');
     }
 
-    const employmentType = user.employmentTypeId as IEmploymentType;
+    const employmentType = user.employmentTypeId as unknown as IEmploymentType;
     const hourlyRate = user.hourlyRate || 0;
     
     // Get all time entries for the pay period

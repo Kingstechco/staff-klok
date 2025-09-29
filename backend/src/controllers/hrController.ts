@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
+import { TenantRequest } from '../middleware/tenantResolver';
 import EmploymentType, { IEmploymentType } from '../models/EmploymentType';
 import User from '../models/User';
 import workHourRegulationService from '../services/workHourRegulationService';
@@ -10,9 +12,9 @@ export class HRController {
    * GET /api/hr/employment-types
    * Get all employment types for the tenant
    */
-  static async getEmploymentTypes(req: Request, res: Response) {
+  static async getEmploymentTypes(req: AuthRequest & TenantRequest, res: Response) {
     try {
-      const { tenantId } = req.tenant;
+      const tenantId = req.tenant._id.toString();
       const employmentTypes = await workHourRegulationService.getAvailableEmploymentTypes(tenantId.toString());
       
       res.json({ employmentTypes });
@@ -26,10 +28,10 @@ export class HRController {
    * POST /api/hr/employment-types
    * Create a new employment type
    */
-  static async createEmploymentType(req: Request, res: Response) {
+  static async createEmploymentType(req: AuthRequest & TenantRequest, res: Response) {
     try {
-      const { tenantId } = req.tenant;
-      const { user } = req;
+      const tenantId = req.tenant._id.toString();
+      const user = req.user;
       
       const employmentType = await workHourRegulationService.createEmploymentType(
         tenantId.toString(),
@@ -51,10 +53,10 @@ export class HRController {
    * PUT /api/hr/employment-types/:id
    * Update an employment type
    */
-  static async updateEmploymentType(req: Request, res: Response) {
+  static async updateEmploymentType(req: AuthRequest & TenantRequest, res: Response) {
     try {
       const { id } = req.params;
-      const { tenantId } = req.tenant;
+      const tenantId = req.tenant._id.toString();
       
       // If setting as default, unset other defaults first
       if (req.body.isDefault) {
@@ -88,10 +90,10 @@ export class HRController {
    * DELETE /api/hr/employment-types/:id
    * Deactivate an employment type
    */
-  static async deactivateEmploymentType(req: Request, res: Response) {
+  static async deactivateEmploymentType(req: AuthRequest & TenantRequest, res: Response) {
     try {
       const { id } = req.params;
-      const { tenantId } = req.tenant;
+      const tenantId = req.tenant._id.toString();
       
       // Check if any active users are using this employment type
       const usersWithType = await User.countDocuments({
@@ -131,10 +133,10 @@ export class HRController {
    * POST /api/hr/employment-types/default-setup
    * Create default employment types for a new tenant
    */
-  static async createDefaultEmploymentTypes(req: Request, res: Response) {
+  static async createDefaultEmploymentTypes(req: AuthRequest & TenantRequest, res: Response) {
     try {
-      const { tenantId } = req.tenant;
-      const { user } = req;
+      const tenantId = req.tenant._id.toString();
+      const user = req.user;
       
       // Check if default types already exist
       const existingTypes = await EmploymentType.countDocuments({ tenantId });
@@ -144,9 +146,9 @@ export class HRController {
         });
       }
       
-      const defaultTypes = await EmploymentType.createDefaultTypes(
+      const defaultTypes = await (EmploymentType as any).createDefaultTypes(
         tenantId,
-        user._id
+        user!._id
       );
       
       res.status(201).json({
@@ -163,7 +165,7 @@ export class HRController {
    * POST /api/hr/validate-work-hours
    * Validate proposed work hours against employment type rules
    */
-  static async validateWorkHours(req: Request, res: Response) {
+  static async validateWorkHours(req: AuthRequest & TenantRequest, res: Response) {
     try {
       const { userId, clockIn, clockOut, breakDuration = 0 } = req.body;
       
@@ -191,7 +193,7 @@ export class HRController {
    * POST /api/hr/validate-shift-scheduling
    * Validate if a shift can be scheduled based on employment rules
    */
-  static async validateShiftScheduling(req: Request, res: Response) {
+  static async validateShiftScheduling(req: AuthRequest & TenantRequest, res: Response) {
     try {
       const { userId, startTime, endTime } = req.body;
       
@@ -218,7 +220,7 @@ export class HRController {
    * POST /api/hr/calculate-payroll
    * Calculate payroll for a user for a specific pay period
    */
-  static async calculatePayroll(req: Request, res: Response) {
+  static async calculatePayroll(req: AuthRequest & TenantRequest, res: Response) {
     try {
       const { userId, payPeriodStart, payPeriodEnd } = req.body;
       
@@ -245,9 +247,9 @@ export class HRController {
    * GET /api/hr/compliance-report
    * Generate compliance report for HR regulations
    */
-  static async getComplianceReport(req: Request, res: Response) {
+  static async getComplianceReport(req: AuthRequest & TenantRequest, res: Response) {
     try {
-      const { tenantId } = req.tenant;
+      const tenantId = req.tenant._id.toString();
       const { startDate, endDate, employmentTypeId } = req.query;
       
       const matchQuery: any = { tenantId, employmentStatus: 'active' };
@@ -300,7 +302,7 @@ export class HRController {
           }
           
           // Check mandatory training completion
-          const employmentType = user.employmentTypeId as IEmploymentType;
+          const employmentType = user.employmentTypeId as unknown as IEmploymentType;
           if (employmentType && employmentType.entitlements.mandatoryTrainingRequired) {
             const missingTrainings = employmentType.entitlements.mandatoryTrainingRequired.filter(
               training => !user.compliance.mandatoryTrainingCompleted.includes(training)
@@ -340,11 +342,11 @@ export class HRController {
    * PUT /api/hr/users/:id/employment-type
    * Update a user's employment type
    */
-  static async updateUserEmploymentType(req: Request, res: Response) {
+  static async updateUserEmploymentType(req: AuthRequest & TenantRequest, res: Response) {
     try {
       const { id } = req.params;
       const { employmentTypeId, effectiveDate, reason } = req.body;
-      const { tenantId } = req.tenant;
+      const tenantId = req.tenant._id.toString();
       
       if (!employmentTypeId) {
         return res.status(400).json({ error: 'employmentTypeId is required' });
@@ -419,11 +421,11 @@ export class HRController {
    * PUT /api/hr/users/:id/leave-balances
    * Update user leave balances
    */
-  static async updateLeaveBalances(req: Request, res: Response) {
+  static async updateLeaveBalances(req: AuthRequest & TenantRequest, res: Response) {
     try {
       const { id } = req.params;
       const { leaveType, adjustment, reason } = req.body;
-      const { tenantId } = req.tenant;
+      const tenantId = req.tenant._id.toString();
       
       if (!leaveType || typeof adjustment !== 'number') {
         return res.status(400).json({ 

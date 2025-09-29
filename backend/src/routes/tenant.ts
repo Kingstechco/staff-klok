@@ -22,7 +22,7 @@ router.post('/create', [
   body('adminUser.name').trim().isLength({ min: 1, max: 100 }),
   body('adminUser.email').isEmail().normalizeEmail(),
   body('adminUser.pin').isLength({ min: 4, max: 8 }).matches(/^\d+$/),
-  body('adminUser.phone').optional().trim().isMobilePhone(),
+  body('adminUser.phone').optional().trim().isMobilePhone('any'),
   body('contactInfo').optional().isObject(),
   body('subscriptionPlan').optional().isIn(['basic', 'professional', 'enterprise', 'contractor']),
   handleValidationErrors

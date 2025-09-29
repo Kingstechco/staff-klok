@@ -489,8 +489,8 @@ ContractorInvoiceSchema.pre('save', function(this: IContractorInvoice, next) {
   }
   
   // Validate VAT number if VAT registered
-  const taxInfo = this.taxInfo || this.southAfricanTaxInfo; // Support both new and legacy fields
-  if (taxInfo?.vatRegistered && !taxInfo.vatNumber) {
+  const validationTaxInfo = this.taxInfo || this.southAfricanTaxInfo; // Support both new and legacy fields
+  if (validationTaxInfo?.vatRegistered && !validationTaxInfo.vatNumber) {
     return next(new Error('VAT number required for VAT registered contractors'));
   }
   
@@ -672,7 +672,7 @@ ContractorInvoiceSchema.statics.calculateSouthAfricanTax = function(
   vatRegistered: boolean, 
   vatRate: number = 15
 ) {
-  return this.calculateTax(subtotal, 'independent_contractor', 'ZA', { vatRegistered, vatRate });
+  return (this as any).calculateTax(subtotal, 'independent_contractor', 'ZA', { vatRegistered, vatRate });
 };
 
 const ContractorInvoice = mongoose.model<IContractorInvoice, IContractorInvoiceModel>('ContractorInvoice', ContractorInvoiceSchema);

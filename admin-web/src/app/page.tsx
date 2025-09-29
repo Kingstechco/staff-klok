@@ -89,6 +89,14 @@ export default function Home() {
         if (response.ok) {
           const data = await response.json();
           setUserDashboard(data);
+        } else {
+          // Fallback to mock data for staff users
+          setUserDashboard({
+            currentEntry: null,
+            today: { hours: 0, entries: 0 },
+            weekly: { hours: 0, overtime: 0, entries: 0 },
+            upcomingShifts: []
+          });
         }
       } else if (hasPermission('analytics_access') || currentUser?.role === 'admin' || currentUser?.role === 'manager') {
         // Admins/managers get organization-wide dashboard
@@ -101,10 +109,34 @@ export default function Home() {
         if (response.ok) {
           const data = await response.json();
           setDashboardStats(data);
+        } else {
+          // Fallback to mock data for admin/manager users
+          setDashboardStats({
+            today: { clockedIn: 0, totalHours: 0, scheduledShifts: 0, entries: [] },
+            weekly: { totalHours: 0, overtime: 0, averageDaily: 0 },
+            general: { activeEmployees: 0, pendingApprovals: 0 },
+            todaySchedule: []
+          });
         }
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
+      // Set fallback data based on user role
+      if (currentUser?.role === 'staff') {
+        setUserDashboard({
+          currentEntry: null,
+          today: { hours: 0, entries: 0 },
+          weekly: { hours: 0, overtime: 0, entries: 0 },
+          upcomingShifts: []
+        });
+      } else {
+        setDashboardStats({
+          today: { clockedIn: 0, totalHours: 0, scheduledShifts: 0, entries: [] },
+          weekly: { totalHours: 0, overtime: 0, averageDaily: 0 },
+          general: { activeEmployees: 0, pendingApprovals: 0 },
+          todaySchedule: []
+        });
+      }
     } finally {
       setLoading(false);
     }

@@ -60,7 +60,7 @@ class SingleToMultiTenantMigration {
       const existingTenant = await Tenant.findOne({});
       if (existingTenant) {
         console.log('📋 Found existing tenant:', existingTenant.name);
-        return existingTenant._id;
+        return existingTenant._id as mongoose.Types.ObjectId;
       }
 
       // Create default tenant based on existing data
@@ -132,7 +132,7 @@ class SingleToMultiTenantMigration {
       this.stats.tenantsCreated++;
       
       console.log('✅ Default tenant created:', defaultTenant._id);
-      return defaultTenant._id;
+      return defaultTenant._id as mongoose.Types.ObjectId;
     } catch (error) {
       const errorMsg = `Failed to create default tenant: ${error.message}`;
       this.stats.errors.push(errorMsg);
@@ -157,7 +157,7 @@ class SingleToMultiTenantMigration {
           
           // Ensure permissions are set based on role
           if (!user.permissions || user.permissions.length === 0) {
-            user.permissions = User.getDefaultPermissions(user.role);
+            user.permissions = (User as any).getDefaultPermissions(user.role);
           }
           
           // Set default preferences if not exist
@@ -184,7 +184,7 @@ class SingleToMultiTenantMigration {
           
           // Remember first admin for tenant reference
           if (user.role === 'admin' && !adminUserId) {
-            adminUserId = user._id;
+            adminUserId = user._id as mongoose.Types.ObjectId;
           }
           
         } catch (error) {
@@ -300,7 +300,7 @@ class SingleToMultiTenantMigration {
           pin: await bcrypt.hash('1234', 12),
           role: 'client_contact',
           employmentType: 'contractor',
-          permissions: User.getDefaultPermissions('client_contact'),
+          permissions: (User as any).getDefaultPermissions('client_contact'),
           clientContactInfo: {
             companyName: 'Sample Client Company',
             approvalAuthority: true,

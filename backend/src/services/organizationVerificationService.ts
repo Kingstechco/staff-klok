@@ -558,7 +558,10 @@ export class OrganizationVerificationService {
     
     organization.riskAssessment = {
       overallRisk: riskProfile.overallRisk,
-      riskFactors: riskProfile.riskFactors,
+      riskFactors: {
+        ...riskProfile.riskFactors,
+        transactionRisk: (riskProfile.riskFactors as any).financialRisk || 0
+      },
       calculatedAt: new Date(),
       reviewRequiredAt: new Date(Date.now() + (
         riskProfile.overallRisk === 'low' ? 365 * 24 * 60 * 60 * 1000 :    // 1 year

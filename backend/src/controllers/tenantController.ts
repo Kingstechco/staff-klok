@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Tenant, { ITenant, BusinessType, SubscriptionPlan } from '../models/Tenant';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
@@ -53,7 +54,7 @@ export class TenantController {
       }
 
       // Get business type defaults
-      const businessDefaults = Tenant.getBusinessTypeDefaults(businessType);
+      const businessDefaults = (Tenant as any).getBusinessTypeDefaults(businessType);
       
       // Create tenant
       const tenant = new Tenant({
@@ -120,20 +121,20 @@ export class TenantController {
       });
 
       // Set features based on subscription plan
-      tenant.subscription.features = tenant.getDefaultFeatures();
+      tenant.subscription.features = (tenant as any).getDefaultFeatures();
       
       await tenant.save();
 
       // Create admin user for the tenant
       const adminUser = new User({
-        tenantId: tenant._id,
+        tenantId: tenant._id as mongoose.Types.ObjectId,
         name: adminName,
         email: adminEmail,
         phone,
         pin: await bcrypt.hash(adminPin, 12),
         role: 'admin',
         employmentType: 'full_time',
-        permissions: User.getDefaultPermissions('admin'),
+        permissions: (User as any).getDefaultPermissions('admin'),
         isActive: true,
         createdBy: null, // Self-created
         preferences: {
@@ -156,11 +157,11 @@ export class TenantController {
       await adminUser.save();
 
       // Update tenant with created by reference
-      tenant.createdBy = adminUser._id;
+      tenant.createdBy = adminUser._id as mongoose.Types.ObjectId;
       await tenant.save();
 
       logger.info('New tenant created', {
-        tenantId: tenant._id,
+        tenantId: tenant._id as mongoose.Types.ObjectId,
         tenantName: tenant.name,
         subdomain: tenant.subdomain,
         businessType: tenant.businessType,
@@ -176,7 +177,7 @@ export class TenantController {
           businessType: tenant.businessType,
           subscriptionPlan: tenant.subscription.plan,
           trialEndsAt: tenant.subscription.trialEndsAt,
-          fullDomain: tenant.fullDomain
+          fullDomain: (tenant as any).fullDomain
         },
         adminUser: {
           id: adminUser._id,
@@ -253,11 +254,11 @@ export class TenantController {
         };
       }
 
-      tenant.lastModifiedBy = req.user?._id;
+      tenant.lastModifiedBy = req.user?._id as mongoose.Types.ObjectId;
       await tenant.save();
 
       logger.info('Tenant settings updated', {
-        tenantId: tenant._id,
+        tenantId: tenant._id as mongoose.Types.ObjectId,
         updatedBy: req.user?._id,
         updatedFields: Object.keys(req.body)
       });
@@ -288,7 +289,7 @@ export class TenantController {
 
       // Get additional statistics
       const userCount = await User.countDocuments({ 
-        tenantId: tenant._id, 
+        tenantId: tenant._id as mongoose.Types.ObjectId, 
         isActive: true 
       });
 
@@ -341,7 +342,7 @@ export class TenantController {
 
       // Check if downgrade is possible (user count within new limits)
       const userCount = await User.countDocuments({ 
-        tenantId: tenant._id, 
+        tenantId: tenant._id as mongoose.Types.ObjectId, 
         isActive: true 
       });
 
@@ -359,7 +360,7 @@ export class TenantController {
       tenant.subscription.maxUsers = limits.maxUsers;
       tenant.subscription.maxProjects = limits.maxProjects;
       tenant.subscription.maxLocations = limits.maxLocations;
-      tenant.subscription.features = tenant.getDefaultFeatures();
+      tenant.subscription.features = (tenant as any).getDefaultFeatures();
 
       // If upgrading from trial, activate subscription
       if (tenant.subscription.status === 'trial' && plan !== 'basic') {
@@ -367,11 +368,11 @@ export class TenantController {
         tenant.subscription.nextBillingDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
       }
 
-      tenant.lastModifiedBy = req.user?._id;
+      tenant.lastModifiedBy = req.user?._id as mongoose.Types.ObjectId;
       await tenant.save();
 
       logger.info('Subscription updated', {
-        tenantId: tenant._id,
+        tenantId: tenant._id as mongoose.Types.ObjectId,
         oldPlan,
         newPlan: plan,
         updatedBy: req.user?._id
@@ -490,11 +491,11 @@ export class TenantController {
         tenant.subscription.status = 'active';
       }
 
-      tenant.lastModifiedBy = req.user?._id;
+      tenant.lastModifiedBy = req.user?._id as mongoose.Types.ObjectId;
       await tenant.save();
 
       logger.warn(`Tenant ${action}d`, {
-        tenantId: tenant._id,
+        tenantId: tenant._id as mongoose.Types.ObjectId,
         tenantName: tenant.name,
         action,
         reason,

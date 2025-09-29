@@ -1,13 +1,13 @@
 import express from 'express';
 import { ContractorInvoiceController } from '../controllers/contractorInvoiceController';
-import { authMiddleware } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
 import { body, param, query } from 'express-validator';
 
 const router = express.Router();
 
 // Apply authentication middleware to all routes
-router.use(authMiddleware);
+router.use(authenticate);
 
 /**
  * @route GET /api/contractor-invoices/types

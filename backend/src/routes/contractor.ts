@@ -1,8 +1,8 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { body, query, param } from 'express-validator';
 import { ContractorController } from '../controllers/contractorController';
 import { authenticate, authorize } from '../middleware/auth';
-import { resolveTenant, requireFeature, checkSubscriptionLimits } from '../middleware/tenantResolver';
+import { resolveTenant, requireFeature } from '../middleware/tenantResolver';
 import { handleValidationErrors } from '../middleware/validation';
 import { auditLog } from '../middleware/auditLogger';
 import autoClockingService from '../services/autoClockingService';
@@ -176,7 +176,7 @@ router.post('/:contractorId/auto-clock/trigger', [
     resource: 'contractor',
     severity: 'medium'
   })
-], async (req: any, res: any) => {
+], async (req: Request, res: Response) => {
   try {
     const { contractorId } = req.params;
     const { date } = req.body;
@@ -208,7 +208,7 @@ router.post('/:contractorId/auto-clock/regenerate', [
     resource: 'contractor',
     severity: 'high'
   })
-], async (req: any, res: any) => {
+], async (req: Request, res: Response) => {
   try {
     const { contractorId } = req.params;
     const { startDate, endDate } = req.body;
@@ -241,9 +241,9 @@ router.get('/auto-clock/statistics', [
     resource: 'system',
     severity: 'low'
   })
-], async (req: any, res: any) => {
+], async (req: Request, res: Response) => {
   try {
-    const stats = await autoClockingService.getStatistics(req.user.tenantId);
+    const stats = await autoClockingService.getStatistics((req as any).user.tenantId);
     res.json(stats);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch statistics' });
@@ -257,7 +257,7 @@ router.get('/auto-clock/statistics', [
 router.get('/auto-clock/health', [
   authenticate,
   authorize(['admin']),
-], async (req: any, res: any) => {
+], async (_req: Request, res: Response) => {
   try {
     const health = autoClockingService.getHealthStatus();
     res.json(health);
@@ -288,6 +288,7 @@ router.get('/dashboard', [
  * Admin/Manager only
  */
 router.get('/contractors', [
+  authenticate,
   authorize(['admin', 'manager']),
   requireFeature('contractor_management'),
   query('status').optional().isIn(['active', 'inactive', 'all']),
@@ -309,6 +310,7 @@ router.get('/contractors', [
  * Admin/Manager/Client Contact only
  */
 router.get('/:contractorId/timesheet', [
+  authenticate,
   authorize(['admin', 'manager', 'client_contact']),
   requireFeature('contractor_management'),
   param('contractorId').isMongoId(),
@@ -330,6 +332,7 @@ router.get('/:contractorId/timesheet', [
  * Admin/Manager/Client Contact only
  */
 router.get('/:contractorId/timesheet/download', [
+  authenticate,
   authorize(['admin', 'manager', 'client_contact']),
   requireFeature('contractor_management'),
   param('contractorId').isMongoId(),
@@ -351,6 +354,7 @@ router.get('/:contractorId/timesheet/download', [
  * Admin/Manager/Client Contact only
  */
 router.post('/timesheets/bulk-approve', [
+  authenticate,
   authorize(['admin', 'manager', 'client_contact']),
   requireFeature('contractor_management'),
   body('entryIds').isArray({ min: 1 }),
@@ -371,6 +375,7 @@ router.post('/timesheets/bulk-approve', [
  * Admin/Manager/Client Contact only
  */
 router.post('/timesheets/bulk-reject', [
+  authenticate,
   authorize(['admin', 'manager', 'client_contact']),
   requireFeature('contractor_management'),
   body('entryIds').isArray({ min: 1 }),
@@ -383,7 +388,7 @@ router.post('/timesheets/bulk-reject', [
     resource: 'time_entry',
     severity: 'high'
   })
-], async (req: any, res: any) => {
+], async (req: Request, res: Response) => {
   // Implementation similar to bulk approve but with rejected status
   try {
     const { entryIds, rejectionReason, approverType = 'manager' } = req.body;
@@ -393,7 +398,7 @@ router.post('/timesheets/bulk-reject', [
         const TimeEntry = require('../models/TimeEntry').default;
         const entry = await TimeEntry.findOne({
           _id: entryId,
-          tenantId: req.tenant._id
+          tenantId: (req as any).tenant._id
         });
 
         if (!entry) {
@@ -401,7 +406,7 @@ router.post('/timesheets/bulk-reject', [
         }
 
         entry.approvals.push({
-          approverId: req.user._id,
+          approverId: (req as any).user._id,
           approverType: approverType as 'manager' | 'client',
           status: 'rejected',
           timestamp: new Date(),
@@ -415,8 +420,8 @@ router.post('/timesheets/bulk-reject', [
       })
     );
 
-    const successful = results.filter(r => r.status === 'fulfilled').length;
-    const failed = results.filter(r => r.status === 'rejected').length;
+    const successful = results.filter((r: any) => r.status === 'fulfilled').length;
+    const failed = results.filter((r: any) => r.status === 'rejected').length;
 
     res.json({
       message: `Bulk rejection completed: ${successful} successful, ${failed} failed`,
@@ -435,24 +440,25 @@ router.post('/timesheets/bulk-reject', [
  * Admin/Manager/Contractor (own)/Client Contact only
  */
 router.get('/:contractorId/projects', [
+  authenticate,
   param('contractorId').isMongoId(),
   query('status').optional().isIn(['planning', 'active', 'on_hold', 'completed', 'cancelled', 'all']),
   query('clientId').optional().isMongoId(),
   handleValidationErrors
-], async (req: any, res: any) => {
+], async (req: Request, res: Response) => {
   try {
     const { contractorId } = req.params;
     const { status = 'active', clientId } = req.query;
 
     // Permission check - users can only view their own projects unless admin/manager/client
-    if (req.user.role === 'contractor' && req.user._id.toString() !== contractorId) {
+    if ((req as any).user.role === 'contractor' && (req as any).user._id.toString() !== contractorId) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
     const Project = require('../models/Project').default;
     
     const query: any = {
-      tenantId: req.tenant._id,
+      tenantId: (req as any).tenant._id,
       'assignedContractors.contractorId': contractorId,
       'assignedContractors.isActive': true
     };
@@ -482,13 +488,14 @@ router.get('/:contractorId/projects', [
  * Admin/Manager/Client Contact only
  */
 router.get('/:contractorId/analytics', [
+  authenticate,
   authorize(['admin', 'manager', 'client_contact']),
   requireFeature('advanced_analytics'),
   param('contractorId').isMongoId(),
   query('period').optional().isIn(['week', 'month', 'quarter', 'year']),
   query('projectId').optional().isMongoId(),
   handleValidationErrors
-], async (req: any, res: any) => {
+], async (req: Request, res: Response) => {
   try {
     const { contractorId } = req.params;
     const { period = 'month', projectId } = req.query;
@@ -515,7 +522,7 @@ router.get('/:contractorId/analytics', [
     
     const query: any = {
       userId: contractorId,
-      tenantId: req.tenant._id,
+      tenantId: (req as any).tenant._id,
       clockIn: { $gte: startDate }
     };
 
@@ -534,22 +541,22 @@ router.get('/:contractorId/analytics', [
         endDate: now
       },
       productivity: {
-        totalHours: entries.reduce((sum, e) => sum + (e.totalHours || 0), 0),
+        totalHours: entries.reduce((sum: number, e: any) => sum + (e.totalHours || 0), 0),
         averageHoursPerDay: 0, // Will calculate below
-        mostProductiveDay: null,
-        leastProductiveDay: null
+        mostProductiveDay: null as any,
+        leastProductiveDay: null as any
       },
       projects: {
-        totalProjects: new Set(entries.map(e => e.projectId?._id?.toString()).filter(Boolean)).size,
-        projectDistribution: {} // Hours per project
+        totalProjects: new Set(entries.map((e: any) => e.projectId?._id?.toString()).filter(Boolean)).size,
+        projectDistribution: {} as { [key: string]: number } // Hours per project
       },
       earnings: {
         totalBillableAmount: 0,
         averageHourlyRate: 0
       },
       patterns: {
-        workingDays: new Set(),
-        peakHours: {} // Hours distribution
+        workingDays: new Set<string>(),
+        peakHours: {} as { [key: string]: number } // Hours distribution
       }
     };
 
@@ -559,7 +566,7 @@ router.get('/:contractorId/analytics', [
     let totalBillable = 0;
     let totalRateWeightedHours = 0;
 
-    entries.forEach(entry => {
+    entries.forEach((entry: any) => {
       const date = entry.clockIn.toISOString().split('T')[0];
       const hour = entry.clockIn.getHours();
       const hours = entry.totalHours || 0;

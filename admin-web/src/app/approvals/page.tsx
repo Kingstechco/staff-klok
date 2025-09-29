@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { timeEntriesAPI, contractorAPI } from '../../utils/api';
 
+// Define TimeEntry interface at top level
 interface TimeEntry {
   _id: string;
   userId: {
@@ -33,9 +34,30 @@ interface TimeEntry {
   notes?: string;
 }
 
+// Type guard to ensure we have a valid TimeEntry array
+const isTimeEntryArray = (data: any): data is TimeEntry[] => {
+  if (!Array.isArray(data)) {
+    return false;
+  }
+  
+  // Empty array is valid
+  if (data.length === 0) {
+    return true;
+  }
+  
+  // Check first item has required properties
+  const firstItem = data[0];
+  return firstItem && 
+         typeof firstItem === 'object' && 
+         '_id' in firstItem && 
+         'userId' in firstItem;
+};
+
 const TimesheetApprovalInterface: React.FC = () => {
-  const { currentUser, currentTenant, canApproveTimesheets } = useAuth();
-  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
+  const authContext = useAuth();
+  const { currentUser, currentTenant, canApproveTimesheets } = authContext;
+  
+  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>(() => []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
@@ -47,20 +69,6 @@ const TimesheetApprovalInterface: React.FC = () => {
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
     endDate: new Date().toISOString().split('T')[0]
   });
-
-  // Check permissions
-  if (!canApproveTimesheets()) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-red-600 mb-4">Access Denied</h2>
-          <p className="text-gray-600">
-            You don't have permission to approve timesheets.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   // Load pending time entries
   useEffect(() => {
@@ -83,18 +91,63 @@ const TimesheetApprovalInterface: React.FC = () => {
           params.projectId = filterProject;
         }
         
+        console.log('Loading pending entries with params:', params);
+        
         const data = await timeEntriesAPI.getEntriesForApproval(params);
-        setTimeEntries(data.entries || data || []);
+        console.log('API response:', data);
+        
+        const entries = data?.entries || data || [];
+        
+        // Ensure we have a valid array of time entries
+        if (isTimeEntryArray(entries)) {
+          setTimeEntries(entries);
+          console.log('Set time entries:', entries.length, 'entries');
+        } else {
+          console.warn('Invalid time entries data received:', entries);
+          setTimeEntries([]);
+        }
       } catch (err: any) {
         console.error('Failed to load pending entries:', err);
         setError(err.message || 'Failed to load pending time entries');
+        setTimeEntries([]); // Ensure we set an empty array on error
       } finally {
         setLoading(false);
       }
     };
 
-    loadPendingEntries();
-  }, [dateRange, filterContractor, filterProject]);
+    // Only load if we have the necessary auth context
+    if (currentUser && canApproveTimesheets()) {
+      loadPendingEntries();
+    } else {
+      setLoading(false);
+    }
+  }, [dateRange, filterContractor, filterProject, currentUser, canApproveTimesheets]);
+
+  // Check if auth is loaded and if user has permissions - render conditionally
+  if (authContext.loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="text-center mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check permissions (with safe call)
+  if (!canApproveTimesheets || !canApproveTimesheets()) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold text-red-600 mb-4">Access Denied</h2>
+          <p className="text-gray-600">
+            You don&apos;t have permission to approve timesheets.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSelectEntry = (entryId: string) => {
     const newSelected = new Set(selectedEntries);

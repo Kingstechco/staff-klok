@@ -404,7 +404,7 @@ export class SouthAfricanComplianceProvider extends ComplianceProvider {
         industryRisk,
         geographicRisk,
         ownershipRisk,
-        transactionRisk,
+        financialRisk: transactionRisk,
         complianceRisk
       },
       riskReasons,

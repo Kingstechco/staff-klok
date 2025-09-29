@@ -130,11 +130,12 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
         ip: req.ip
       });
       
-      return res.status(404).json({
+      res.status(404).json({
         error: 'Tenant not found',
         message: 'The requested organization could not be found or is inactive.',
         code: 'TENANT_NOT_FOUND'
       });
+      return;
     }
     
     // Additional validation checks
@@ -148,11 +149,12 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
         ip: req.ip
       });
       
-      return res.status(403).json({
+      res.status(403).json({
         error: 'Account suspended',
         message: tenant.suspensionReason || 'This account has been suspended.',
         code: 'TENANT_SUSPENDED'
       });
+      return;
     }
     
     // Check subscription status
@@ -163,11 +165,12 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
         ip: req.ip
       });
       
-      return res.status(403).json({
+      res.status(403).json({
         error: 'Subscription inactive',
         message: 'This account subscription is not active.',
         code: 'SUBSCRIPTION_INACTIVE'
       });
+      return;
     }
     
     // Check trial expiration
@@ -181,11 +184,12 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
         ip: req.ip
       });
       
-      return res.status(403).json({
+      res.status(403).json({
         error: 'Trial expired',
         message: 'The free trial period has ended. Please upgrade to continue.',
         code: 'TRIAL_EXPIRED'
       });
+      return;
     }
     
     // All checks passed, attach tenant to request
@@ -216,11 +220,12 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
   } catch (error) {
     logger.error('Tenant resolution error:', error);
     
-    return res.status(500).json({
+    res.status(500).json({
       error: 'Tenant resolution failed',
       message: 'An error occurred while identifying the organization.',
       code: 'TENANT_RESOLUTION_ERROR'
     });
+    return;
   }
 };
 
@@ -231,13 +236,14 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
 export const requireFeature = (featureName: string) => {
   return (req: TenantRequest, res: Response, next: NextFunction): void => {
     if (!req.tenant) {
-      return res.status(500).json({
+      res.status(500).json({
         error: 'Tenant context missing',
         code: 'MISSING_TENANT_CONTEXT'
       });
+      return;
     }
     
-    if (!req.tenant.hasFeature(featureName)) {
+    if (!(req.tenant as any).hasFeature(featureName)) {
       logger.warn('Feature access denied', {
         tenantId: req.tenant._id,
         featureName,
@@ -245,13 +251,14 @@ export const requireFeature = (featureName: string) => {
         availableFeatures: req.tenant.subscription.features
       });
       
-      return res.status(403).json({
+      res.status(403).json({
         error: 'Feature not available',
         message: `This feature requires a higher subscription plan.`,
         feature: featureName,
         currentPlan: req.tenant.subscription.plan,
         code: 'FEATURE_NOT_AVAILABLE'
       });
+      return;
     }
     
     next();
@@ -265,10 +272,11 @@ export const checkSubscriptionLimits = (limitType: 'users' | 'projects' | 'locat
   return async (req: TenantRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.tenant) {
-        return res.status(500).json({
+        res.status(500).json({
           error: 'Tenant context missing',
           code: 'MISSING_TENANT_CONTEXT'
         });
+        return;
       }
       
       let currentCount = 0;
@@ -309,7 +317,7 @@ export const checkSubscriptionLimits = (limitType: 'users' | 'projects' | 'locat
           subscriptionPlan: req.tenant.subscription.plan
         });
         
-        return res.status(403).json({
+        res.status(403).json({
           error: 'Subscription limit exceeded',
           message: `You have reached the maximum number of ${limitType} allowed by your subscription plan.`,
           limitType,
@@ -318,16 +326,18 @@ export const checkSubscriptionLimits = (limitType: 'users' | 'projects' | 'locat
           subscriptionPlan: req.tenant.subscription.plan,
           code: 'SUBSCRIPTION_LIMIT_EXCEEDED'
         });
+        return;
       }
       
       next();
       
     } catch (error) {
       logger.error('Subscription limit check error:', error);
-      return res.status(500).json({
+      res.status(500).json({
         error: 'Subscription validation failed',
         code: 'SUBSCRIPTION_CHECK_ERROR'
       });
+      return;
     }
   };
 };

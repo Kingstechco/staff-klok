@@ -5,6 +5,7 @@ import { authenticate, authorize } from '../middleware/auth';
 import { resolveTenant } from '../middleware/tenantResolver';
 import { handleValidationErrors } from '../middleware/validation';
 import { auditLog } from '../middleware/auditLogger';
+import User from '../models/User';
 
 const router = Router();
 
