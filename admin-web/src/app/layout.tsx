@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navigation from "@/components/Navigation";
+import TopNavigation from "@/components/TopNavigation";
+import Sidebar from "@/components/Sidebar";
+import GitHubLayout from "@/components/GitHubLayout";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
 import { ScheduleProvider } from "@/contexts/ScheduleContext";
@@ -9,7 +11,6 @@ import { ToastProvider } from "@/contexts/ToastContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { TimeDisplayProvider } from "@/contexts/TimeDisplayContext";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
-import DynamicLayout from "@/components/DynamicLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -38,10 +39,11 @@ export default function RootLayout({
                 <ScheduleProvider>
                   <SidebarProvider>
                     <TimeDisplayProvider>
-                      <Navigation />
-                      <DynamicLayout>
+                      <TopNavigation />
+                      <Sidebar />
+                      <GitHubLayout>
                         {children}
-                      </DynamicLayout>
+                      </GitHubLayout>
                     </TimeDisplayProvider>
                   </SidebarProvider>
                 </ScheduleProvider>
