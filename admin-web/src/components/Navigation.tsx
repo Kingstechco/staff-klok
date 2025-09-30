@@ -91,11 +91,7 @@ export default function Navigation() {
               <div className="flex flex-col items-center justify-center w-full space-y-2">
                 {/* Hamburger Menu - Top */}
                 <button
-                  onClick={() => {
-                    console.log('Toggle clicked. Current state:', sidebarCollapsed);
-                    setSidebarCollapsed(!sidebarCollapsed);
-                    console.log('New state should be:', !sidebarCollapsed);
-                  }}
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                   className="flex-shrink-0 p-2 rounded-lg bg-gray-100 hover:bg-indigo-100 transition-all duration-300 shadow-sm hover:shadow-md border border-gray-300 hover:border-indigo-400"
                   title="Expand sidebar"
                 >
@@ -131,11 +127,7 @@ export default function Navigation() {
                 
                 {/* Hamburger Menu - Right side */}
                 <button
-                  onClick={() => {
-                    console.log('Toggle clicked. Current state:', sidebarCollapsed);
-                    setSidebarCollapsed(!sidebarCollapsed);
-                    console.log('New state should be:', !sidebarCollapsed);
-                  }}
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                   className="flex-shrink-0 p-2 rounded-lg bg-gray-100 hover:bg-indigo-100 transition-all duration-300 shadow-sm hover:shadow-md border border-gray-300 hover:border-indigo-400"
                   title="Collapse sidebar"
                 >
