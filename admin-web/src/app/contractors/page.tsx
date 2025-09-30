@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAuthToken } from '@/utils/api';
+import TimeDisplay from '@/components/ui/TimeDisplay';
 
 interface Contractor {
   id: string;
@@ -278,258 +279,354 @@ export default function ContractorsPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        <div className="max-w-6xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="text-center mb-6 sm:mb-8 animate-in">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-              <div className="text-left">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                  Contractor Management
-                </h1>
-                <p className="text-gray-600 text-sm sm:text-base">
-                  Manage contractors, auto-clocking settings, and approvals
-                </p>
+    <div className="min-h-screen bg-white">
+      {/* Enhanced Header */}
+      <div className="relative border-b border-gray-200/60 bg-gradient-to-r from-white via-white to-indigo-50/30 overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/10 via-transparent to-purple-50/10 opacity-50" />
+        
+        {/* Floating Decorative Elements */}
+        <div className="absolute top-4 right-8 opacity-20">
+          <div className="flex space-x-2">
+            <div className="h-2 w-2 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 animate-pulse" style={{ animationDelay: '0ms' }} />
+            <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 animate-pulse" style={{ animationDelay: '800ms' }} />
+          </div>
+        </div>
+        
+        <div className="relative px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            {/* Title Section */}
+            <div className="flex-1">
+              <h1 className="text-2xl font-black bg-gradient-to-r from-gray-900 via-gray-800 to-indigo-700 bg-clip-text text-transparent">
+                Contractor Management
+              </h1>
+              <p className="mt-1 text-sm font-semibold text-gray-600">
+                Manage contractors, auto-clocking settings, and approvals
+              </p>
+            </div>
+            
+            {/* Actions and Time Display */}
+            <div className="flex items-center gap-4">
+              <div className="flex gap-3">
+                {/* Enhanced Invite Button */}
+                <button
+                  onClick={() => setShowInviteModal(true)}
+                  className="group relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 font-bold shadow-xl hover:shadow-2xl hover:shadow-indigo-500/25 hover:scale-105 border-2 border-white/20"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/20 to-purple-400/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <PlusIcon className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+                  Invite Contractor
+                </button>
               </div>
+              
+              <TimeDisplay />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 sm:px-6 lg:px-8 py-8">
+        {/* Error Alert */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-8">
+            <div className="flex items-center">
+              <ExclamationTriangleIcon className="h-5 w-5 text-red-400 mr-3" />
+              <p className="text-sm text-red-800">{error}</p>
               <button
-                onClick={() => setShowInviteModal(true)}
-                className="oklok-button-primary flex items-center gap-2"
+                onClick={() => setError(null)}
+                className="ml-auto text-red-400 hover:text-red-600"
               >
-                <PlusIcon className="h-4 w-4" />
-                Invite Contractor
+                <XMarkIcon className="h-4 w-4" />
               </button>
             </div>
           </div>
+        )}
 
-          {/* Error Alert */}
-          {error && (
-            <div className="mb-6 animate-in">
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                <div className="flex items-center">
-                  <ExclamationTriangleIcon className="h-5 w-5 text-red-400 mr-3" />
-                  <p className="text-sm text-red-800">{error}</p>
-                  <button
-                    onClick={() => setError(null)}
-                    className="ml-auto text-red-400 hover:text-red-600"
-                  >
-                    <XMarkIcon className="h-4 w-4" />
-                  </button>
-                </div>
+        {/* Enhanced Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="group relative bg-gradient-to-br from-white to-indigo-50/30 p-6 border border-gray-200/60 rounded-2xl hover:border-indigo-300 hover:shadow-2xl hover:shadow-indigo-500/15 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm" />
+            <div className="relative flex items-center">
+              <div className="inline-flex p-3 rounded-xl bg-indigo-50 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300 border-2 border-white/50">
+                <UsersIcon className="h-6 w-6 text-indigo-600 group-hover:animate-pulse" />
+              </div>
+              <div className="ml-4 flex-1">
+                <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">Total Contractors</p>
+                <p className="text-3xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent group-hover:from-indigo-700 group-hover:to-purple-700 transition-all duration-300">{stats.total}</p>
+                <p className="text-xs text-gray-500 font-semibold group-hover:text-gray-600 transition-colors duration-300">All contractors</p>
               </div>
             </div>
-          )}
-
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-            <div className="oklok-card animate-in" style={{ animationDelay: '100ms' }}>
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-12 w-12 bg-indigo-100 rounded-xl flex items-center justify-center">
-                    <UsersIcon className="h-6 w-6 text-indigo-600" />
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Total Contractors</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                </div>
-              </div>
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-300%] transition-transform duration-1500" />
             </div>
-
-            <div className="oklok-card animate-in" style={{ animationDelay: '200ms' }}>
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-12 w-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                    <CheckCircleIcon className="h-6 w-6 text-emerald-600" />
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Active</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="oklok-card animate-in" style={{ animationDelay: '300ms' }}>
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-12 w-12 bg-amber-100 rounded-xl flex items-center justify-center">
-                    <ClockIcon className="h-6 w-6 text-amber-600" />
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Pending Approval</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.pending}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="oklok-card animate-in" style={{ animationDelay: '400ms' }}>
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-12 w-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                    <BoltIcon className="h-6 w-6 text-purple-600" />
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Auto-Clocking</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.autoClocking}</p>
-                </div>
-              </div>
-            </div>
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 rounded-b-2xl" />
           </div>
 
-          {/* Search and Filter */}
-          <div className="oklok-card animate-in" style={{ animationDelay: '500ms' }}>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search contractors..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="oklok-input pl-10"
-                  />
-                </div>
+          <div className="group relative bg-gradient-to-br from-white to-green-50/30 p-6 border border-gray-200/60 rounded-2xl hover:border-green-300 hover:shadow-2xl hover:shadow-green-500/15 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm" />
+            <div className="relative flex items-center">
+              <div className="inline-flex p-3 rounded-xl bg-green-50 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300 border-2 border-white/50">
+                <CheckCircleIcon className="h-6 w-6 text-green-600 group-hover:animate-bounce" />
               </div>
-              <div className="sm:w-48">
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="oklok-input"
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="active">Active</option>
-                  <option value="invited">Invited</option>
-                  <option value="setup_pending">Setup Pending</option>
-                  <option value="setup_completed">Awaiting Approval</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+              <div className="ml-4 flex-1">
+                <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">Active</p>
+                <p className="text-3xl font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent group-hover:from-green-700 group-hover:to-emerald-700 transition-all duration-300">{stats.active}</p>
+                <p className="text-xs text-gray-500 font-semibold group-hover:text-gray-600 transition-colors duration-300">Currently working</p>
               </div>
             </div>
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-300%] transition-transform duration-1500" />
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-emerald-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 rounded-b-2xl" />
           </div>
 
-          {/* Tabs */}
-          <div className="animate-in" style={{ animationDelay: '600ms' }}>
-            <div className="border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8">
-                <button
-                  onClick={() => setActiveTab('active')}
-                  className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === 'active'
-                      ? 'border-indigo-500 text-indigo-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Active Contractors ({filteredContractors.filter(c => c.isActive).length})
-                </button>
-                <button
-                  onClick={() => setActiveTab('pending')}
-                  className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === 'pending'
-                      ? 'border-indigo-500 text-indigo-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Pending Approvals ({pendingApprovals.length})
-                  {pendingApprovals.length > 0 && (
-                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                      {pendingApprovals.length}
-                    </span>
-                  )}
-                </button>
-              </nav>
+          <div className="group relative bg-gradient-to-br from-white to-amber-50/30 p-6 border border-gray-200/60 rounded-2xl hover:border-amber-300 hover:shadow-2xl hover:shadow-amber-500/15 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm" />
+            <div className="relative flex items-center">
+              <div className="inline-flex p-3 rounded-xl bg-amber-50 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300 border-2 border-white/50">
+                <ClockIcon className="h-6 w-6 text-amber-600 group-hover:animate-pulse" />
+              </div>
+              <div className="ml-4 flex-1">
+                <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">Pending Approval</p>
+                <p className="text-3xl font-black bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent group-hover:from-amber-700 group-hover:to-orange-700 transition-all duration-300">{stats.pending}</p>
+                <p className="text-xs text-gray-500 font-semibold group-hover:text-gray-600 transition-colors duration-300">Need review</p>
+              </div>
             </div>
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-300%] transition-transform duration-1500" />
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 rounded-b-2xl" />
+          </div>
+
+          <div className="group relative bg-gradient-to-br from-white to-purple-50/30 p-6 border border-gray-200/60 rounded-2xl hover:border-purple-300 hover:shadow-2xl hover:shadow-purple-500/15 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/10 via-violet-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm" />
+            <div className="relative flex items-center">
+              <div className="inline-flex p-3 rounded-xl bg-purple-50 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300 border-2 border-white/50">
+                <BoltIcon className="h-6 w-6 text-purple-600 group-hover:animate-bounce" />
+              </div>
+              <div className="ml-4 flex-1">
+                <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">Auto-Clocking</p>
+                <p className="text-3xl font-black bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent group-hover:from-purple-700 group-hover:to-violet-700 transition-all duration-300">{stats.autoClocking}</p>
+                <p className="text-xs text-gray-500 font-semibold group-hover:text-gray-600 transition-colors duration-300">Enabled</p>
+              </div>
+            </div>
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-300%] transition-transform duration-1500" />
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-violet-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 rounded-b-2xl" />
+          </div>
+        </div>
+
+        {/* Enhanced Search and Filter */}
+        <div className="group relative bg-gradient-to-br from-white via-white to-gray-50/30 border border-gray-200/60 rounded-2xl p-6 mb-8 hover:shadow-xl hover:shadow-gray-500/10 transition-all duration-300 overflow-hidden backdrop-blur-sm">
+          {/* Enhanced Background Pattern */}
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/20 via-transparent to-purple-50/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          
+          {/* Floating Decorative Elements */}
+          <div className="absolute top-4 right-4 opacity-20">
+            <div className="flex space-x-1">
+              <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 animate-pulse" />
+              <div className="h-1 w-1 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 animate-pulse" style={{ animationDelay: '500ms' }} />
+            </div>
+          </div>
+          
+          <div className="relative flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative group/search">
+                <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-hover/search:text-indigo-600 transition-colors duration-300" />
+                <input
+                  type="text"
+                  placeholder="Search contractors..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-11 pr-4 py-3 w-full border-2 border-gray-300/60 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 bg-gradient-to-r from-white to-gray-50/50 font-medium transition-all duration-300 hover:shadow-md"
+                />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 group-hover/search:opacity-100 transition-opacity duration-300 pointer-events-none" />
+              </div>
+            </div>
+            <div className="sm:w-48">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-300/60 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 bg-gradient-to-r from-white to-gray-50/50 font-bold text-gray-700 cursor-pointer hover:shadow-md transition-all duration-300"
+              >
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="invited">Invited</option>
+                <option value="setup_pending">Setup Pending</option>
+                <option value="setup_completed">Awaiting Approval</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Tabs */}
+        <div className="group relative bg-gradient-to-br from-white via-white to-gray-50/30 border border-gray-200/60 rounded-2xl p-6 hover:shadow-xl hover:shadow-gray-500/10 transition-all duration-300 overflow-hidden backdrop-blur-sm">
+          {/* Enhanced Background Pattern */}
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/20 via-transparent to-purple-50/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          
+          <div className="relative border-b border-gray-200/60">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('active')}
+                className={`py-3 px-1 border-b-2 font-bold text-sm transition-all duration-300 ${
+                  activeTab === 'active'
+                    ? 'border-indigo-500 text-indigo-600 bg-gradient-to-r from-indigo-50/50 to-purple-50/30 rounded-t-lg'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-indigo-50/30 rounded-t-lg'
+                }`}
+              >
+                Active Contractors ({filteredContractors.filter(c => c.isActive).length})
+              </button>
+              <button
+                onClick={() => setActiveTab('pending')}
+                className={`py-3 px-1 border-b-2 font-bold text-sm transition-all duration-300 ${
+                  activeTab === 'pending'
+                    ? 'border-indigo-500 text-indigo-600 bg-gradient-to-r from-indigo-50/50 to-purple-50/30 rounded-t-lg'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-indigo-50/30 rounded-t-lg'
+                }`}
+              >
+                Pending Approvals ({pendingApprovals.length})
+                {pendingApprovals.length > 0 && (
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 shadow-sm border border-amber-200/60">
+                    {pendingApprovals.length}
+                  </span>
+                )}
+              </button>
+            </nav>
           </div>
 
           {/* Content */}
-          <div className="animate-in" style={{ animationDelay: '700ms' }}>
+          <div className="mt-6">
             {activeTab === 'active' && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {filteredContractors.length === 0 ? (
-                  <div className="oklok-card text-center py-12">
-                    <UsersIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No contractors found</h3>
-                    <p className="text-gray-500 mb-6">
-                      {contractors.length === 0 ? 'Get started by inviting your first contractor.' : 'Try adjusting your search or filter criteria.'}
-                    </p>
-                    <button
-                      onClick={() => setShowInviteModal(true)}
-                      className="oklok-button-primary"
-                    >
-                      Invite Contractor
-                    </button>
+                  <div className="relative text-center py-16 px-6">
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/30 via-purple-50/20 to-indigo-50/30 opacity-50 rounded-2xl" />
+                    <div className="relative">
+                      <div className="inline-flex p-4 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 shadow-lg mb-4">
+                        <UsersIcon className="h-12 w-12 text-indigo-600" />
+                      </div>
+                      <h3 className="text-xl font-black text-gray-900 mb-3">No contractors found</h3>
+                      <p className="text-sm font-medium text-gray-600 mb-8 max-w-md mx-auto">
+                        {contractors.length === 0 
+                          ? 'Get started by inviting your first contractor to begin building your team.' 
+                          : 'Try adjusting your search or filter criteria to find what you\'re looking for.'}
+                      </p>
+                      {contractors.length === 0 && (
+                        <div className="mt-8">
+                          <button
+                            onClick={() => setShowInviteModal(true)}
+                            className="group relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 font-bold shadow-xl hover:shadow-2xl hover:shadow-indigo-500/25 hover:scale-105 border-2 border-white/20"
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/20 to-purple-400/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <PlusIcon className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+                            <span className="relative">Invite Your First Contractor</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   filteredContractors.map((contractor, index) => (
-                    <div key={contractor.id} className="oklok-card animate-in" style={{ animationDelay: `${800 + index * 100}ms` }}>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div 
+                      key={contractor.id} 
+                      className="group relative border border-gray-200/60 rounded-2xl p-6 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-500 hover:-translate-y-2 bg-gradient-to-br from-white to-gray-50/30 overflow-hidden"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      {/* Enhanced Background Pattern */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/20 via-transparent to-purple-50/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      
+                      {/* Floating Accent */}
+                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-40 transition-opacity duration-300">
+                        <div className="h-2 w-2 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 animate-pulse" />
+                      </div>
+                      
+                      <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="h-10 w-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-                              <span className="text-indigo-600 font-semibold text-sm">
-                                {contractor.name.split(' ').map(n => n[0]).join('')}
-                              </span>
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="relative">
+                              <div className="h-14 w-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300 border-2 border-white/50">
+                                <span>
+                                  {contractor.name.split(' ').map(n => n[0]).join('')}
+                                </span>
+                              </div>
+                              {/* Status indicator for active contractors */}
+                              {contractor.isActive && (
+                                <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full border-2 border-white shadow-lg animate-pulse" />
+                              )}
                             </div>
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900">{contractor.name}</h3>
-                              <p className="text-sm text-gray-500">{contractor.email}</p>
-                            </div>
-                            <div className="ml-auto sm:ml-4">
-                              <span className={`oklok-badge ${StatusConfig[contractor.registrationStatus].color}`}>
-                                {renderStatusIcon(contractor.registrationStatus)}
-                                {StatusLabels[contractor.registrationStatus]}
-                              </span>
+                            <div className="flex-1">
+                              <h3 className="text-xl font-black text-gray-900 group-hover:text-indigo-700 transition-colors duration-300">{contractor.name}</h3>
+                              <p className="text-sm font-medium text-gray-500 group-hover:text-gray-600 transition-colors duration-300">{contractor.email}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold shadow-sm border transition-all duration-300 ${StatusConfig[contractor.registrationStatus].color}`}>
+                                  {renderStatusIcon(contractor.registrationStatus)}
+                                  {StatusLabels[contractor.registrationStatus]}
+                                </span>
+                                {contractor.lastLogin && (
+                                  <span className="text-xs font-medium text-gray-400">
+                                    Last seen: {new Date(contractor.lastLogin).toLocaleDateString()}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                           
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-2">
-                              <BuildingOfficeIcon className="h-4 w-4 text-gray-400" />
-                              <span className="font-medium">Agency:</span>
-                              <span>{contractor.contractingAgency || 'N/A'}</span>
+                            <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300">
+                              <BuildingOfficeIcon className="h-4 w-4 text-indigo-500" />
+                              <span className="font-bold">Agency:</span>
+                              <span className="font-medium">{contractor.contractingAgency || 'N/A'}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <TagIcon className="h-4 w-4 text-gray-400" />
-                              <span className="font-medium">Department:</span>
-                              <span>{contractor.department || 'N/A'}</span>
+                            <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300">
+                              <TagIcon className="h-4 w-4 text-purple-500" />
+                              <span className="font-bold">Department:</span>
+                              <span className="font-medium">{contractor.department || 'N/A'}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <UserIcon className="h-4 w-4 text-gray-400" />
-                              <span className="font-medium">Manager:</span>
-                              <span>{contractor.manager?.name || 'N/A'}</span>
+                            <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300">
+                              <UserIcon className="h-4 w-4 text-blue-500" />
+                              <span className="font-bold">Manager:</span>
+                              <span className="font-medium">{contractor.manager?.name || 'N/A'}</span>
                             </div>
                             {contractor.hourlyRate && (
-                              <div className="flex items-center gap-2">
-                                <CurrencyDollarIcon className="h-4 w-4 text-gray-400" />
-                                <span className="font-medium">Rate:</span>
-                                <span>${contractor.hourlyRate}/hr</span>
+                              <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50/50 hover:to-emerald-50/30 transition-all duration-300">
+                                <CurrencyDollarIcon className="h-4 w-4 text-green-500" />
+                                <span className="font-bold">Rate:</span>
+                                <span className="font-medium text-green-700">${contractor.hourlyRate}/hr</span>
                               </div>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mt-6 pt-6 border-t border-gray-200/40">
                           {contractor.autoClockingEnabled && contractor.processingMode && (
-                            <div className="text-sm text-gray-600">
-                              <span className="font-medium text-gray-700">Auto-Clocking:</span><br />
-                              <span className="text-xs">{AutoClockingModeLabels[contractor.processingMode]}</span>
+                            <div className="group/mode relative text-sm p-4 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200/60 rounded-xl hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 flex-1 min-w-0">
+                              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-0 group-hover/mode:opacity-100 transition-opacity duration-300" />
+                              <div className="relative flex items-start gap-2">
+                                <CogIcon className="h-4 w-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="font-bold text-indigo-700 block">Auto-Clocking Mode</span>
+                                  <span className="text-xs font-medium text-indigo-600 mt-1 block">{AutoClockingModeLabels[contractor.processingMode]}</span>
+                                </div>
+                              </div>
                             </div>
                           )}
                           
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-gray-700">Auto-Clock:</span>
+                          <div className="flex items-center gap-4">
+                            <div className="group/toggle flex items-center gap-3 p-4 bg-gradient-to-r from-gray-50 to-indigo-50/50 border border-gray-200/60 rounded-xl hover:shadow-lg hover:shadow-gray-500/10 transition-all duration-300">
+                              <div className="flex items-center gap-2">
+                                <BoltIcon className="h-4 w-4 text-gray-600 group-hover/toggle:text-indigo-600 transition-colors duration-300" />
+                                <span className="text-sm font-bold text-gray-700 group-hover/toggle:text-indigo-700 transition-colors duration-300">Auto-Clock</span>
+                              </div>
                               <button
                                 onClick={() => toggleAutoClocking(contractor.id, !contractor.autoClockingEnabled)}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                  contractor.autoClockingEnabled ? 'bg-indigo-600' : 'bg-gray-200'
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                                  contractor.autoClockingEnabled ? 'bg-gradient-to-r from-indigo-500 to-purple-600' : 'bg-gradient-to-r from-gray-300 to-gray-400'
                                 }`}
                               >
                                 <span
-                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-300 shadow-lg ${
                                     contractor.autoClockingEnabled ? 'translate-x-6' : 'translate-x-1'
                                   }`}
                                 />
@@ -545,52 +642,62 @@ export default function ContractorsPage() {
             )}
 
             {activeTab === 'pending' && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {pendingApprovals.length === 0 ? (
-                  <div className="oklok-card text-center py-12">
-                    <ClockIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No pending approvals</h3>
-                    <p className="text-gray-500">All contractor setups have been processed.</p>
+                  <div className="relative text-center py-16 px-6">
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-50/30 via-emerald-50/20 to-green-50/30 opacity-50 rounded-2xl" />
+                    <div className="relative">
+                      <div className="inline-flex p-4 rounded-2xl bg-gradient-to-br from-green-100 to-emerald-100 shadow-lg mb-4">
+                        <CheckCircleIcon className="h-12 w-12 text-green-600" />
+                      </div>
+                      <h3 className="text-xl font-black text-gray-900 mb-3">All caught up!</h3>
+                      <p className="text-sm font-medium text-gray-600 max-w-md mx-auto">
+                        No pending contractor approvals. All setups have been processed and reviewed.
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   pendingApprovals.map((contractor, index) => (
-                    <div key={contractor.id} className="oklok-card animate-in" style={{ animationDelay: `${800 + index * 100}ms` }}>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div key={contractor.id} className="group relative border border-gray-200/60 rounded-2xl p-6 hover:border-amber-300 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-amber-50/20 overflow-hidden">
+                      {/* Enhanced Background Pattern */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-amber-50/20 via-transparent to-orange-50/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      
+                      <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <div className="h-10 w-10 bg-amber-100 rounded-xl flex items-center justify-center">
-                              <span className="text-amber-600 font-semibold text-sm">
+                            <div className="h-12 w-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300 border-2 border-white/50">
+                              <span>
                                 {contractor.name.split(' ').map(n => n[0]).join('')}
                               </span>
                             </div>
                             <div>
-                              <h3 className="text-lg font-semibold text-gray-900">{contractor.name}</h3>
-                              <p className="text-sm text-gray-500">{contractor.email}</p>
-                              <p className="text-xs text-gray-400">
+                              <h3 className="text-lg font-black text-gray-900 group-hover:text-amber-700 transition-colors duration-300">{contractor.name}</h3>
+                              <p className="text-sm font-medium text-gray-500 group-hover:text-gray-600 transition-colors duration-300">{contractor.email}</p>
+                              <p className="text-xs font-semibold text-amber-600">
                                 Setup completed: {new Date(contractor.setupCompletedAt).toLocaleDateString()}
                               </p>
                             </div>
                           </div>
                           
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-2">
-                              <BuildingOfficeIcon className="h-4 w-4 text-gray-400" />
-                              <span className="font-medium">Agency:</span>
-                              <span>{contractor.contractingAgency || 'N/A'}</span>
+                            <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gradient-to-r hover:from-amber-50/50 hover:to-orange-50/30 transition-all duration-300">
+                              <BuildingOfficeIcon className="h-4 w-4 text-amber-500" />
+                              <span className="font-bold">Agency:</span>
+                              <span className="font-medium">{contractor.contractingAgency || 'N/A'}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <CogIcon className="h-4 w-4 text-gray-400" />
-                              <span className="font-medium">Auto-Clocking:</span>
-                              <span>
+                            <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gradient-to-r hover:from-amber-50/50 hover:to-orange-50/30 transition-all duration-300">
+                              <CogIcon className="h-4 w-4 text-orange-500" />
+                              <span className="font-bold">Auto-Clocking:</span>
+                              <span className="font-medium">
                                 {contractor.autoClockingSettings?.processingMode ? 
                                   AutoClockingModeLabels[contractor.autoClockingSettings.processingMode as keyof typeof AutoClockingModeLabels] || 'N/A' : 'N/A'}
                               </span>
                             </div>
                             {contractor.hourlyRate && (
-                              <div className="flex items-center gap-2">
-                                <CurrencyDollarIcon className="h-4 w-4 text-gray-400" />
-                                <span className="font-medium">Rate:</span>
-                                <span>${contractor.hourlyRate}/hr</span>
+                              <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50/50 hover:to-emerald-50/30 transition-all duration-300">
+                                <CurrencyDollarIcon className="h-4 w-4 text-green-500" />
+                                <span className="font-bold">Rate:</span>
+                                <span className="font-medium text-green-700">${contractor.hourlyRate}/hr</span>
                               </div>
                             )}
                           </div>
@@ -604,16 +711,17 @@ export default function ContractorsPage() {
                                 handleApproveContractor(contractor.id, false, reason);
                               }
                             }}
-                            className="oklok-button-danger text-sm px-4 py-2"
+                            className="group relative inline-flex items-center px-5 py-2.5 border border-red-300/60 rounded-xl text-sm font-bold text-red-700 bg-gradient-to-r from-white to-red-50 hover:from-red-50 hover:to-red-100 transition-all duration-300 hover:shadow-lg hover:shadow-red-500/10 hover:-translate-y-0.5"
                           >
-                            <XMarkIcon className="h-4 w-4 mr-1" />
+                            <XMarkIcon className="h-4 w-4 mr-2 group-hover:animate-bounce" />
                             Reject
                           </button>
                           <button
                             onClick={() => handleApproveContractor(contractor.id, true)}
-                            className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-medium px-4 py-2 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 text-sm"
+                            className="group relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all duration-300 font-bold shadow-xl hover:shadow-2xl hover:shadow-green-500/25 hover:scale-105 border-2 border-white/20"
                           >
-                            <CheckIcon className="h-4 w-4 mr-1" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-green-400/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <CheckIcon className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform duration-300" />
                             Approve
                           </button>
                         </div>
@@ -624,112 +732,112 @@ export default function ContractorsPage() {
               </div>
             )}
           </div>
+        </div>
 
-          {/* Invite Contractor Modal */}
-          {showInviteModal && (
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-              <div className="relative oklok-card max-w-lg w-full max-h-[90vh] overflow-y-auto animate-in">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900">Invite Contractor</h3>
-                  <button
-                    onClick={() => setShowInviteModal(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <XMarkIcon className="h-6 w-6" />
-                  </button>
+        {/* Invite Contractor Modal */}
+        {showInviteModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+            <div className="relative bg-white border border-gray-200 rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">Invite Contractor</h3>
+                <button
+                  onClick={() => setShowInviteModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleInviteContractor} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={inviteForm.name}
+                    onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Enter contractor's full name"
+                  />
                 </div>
                 
-                <form onSubmit={handleInviteContractor} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={inviteForm.name}
-                      onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })}
-                      className="oklok-input"
-                      placeholder="Enter contractor's full name"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
-                    <input
-                      type="email"
-                      required
-                      value={inviteForm.email}
-                      onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                      className="oklok-input"
-                      placeholder="contractor@example.com"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    value={inviteForm.email}
+                    onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="contractor@example.com"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Contracting Agency</label>
-                    <input
-                      type="text"
-                      value={inviteForm.contractingAgency}
-                      onChange={(e) => setInviteForm({ ...inviteForm, contractingAgency: e.target.value })}
-                      className="oklok-input"
-                      placeholder="e.g., Tech Solutions Inc."
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Contracting Agency</label>
+                  <input
+                    type="text"
+                    value={inviteForm.contractingAgency}
+                    onChange={(e) => setInviteForm({ ...inviteForm, contractingAgency: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="e.g., Tech Solutions Inc."
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                    <input
-                      type="text"
-                      value={inviteForm.department}
-                      onChange={(e) => setInviteForm({ ...inviteForm, department: e.target.value })}
-                      className="oklok-input"
-                      placeholder="e.g., IT, Marketing, Operations"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                  <input
+                    type="text"
+                    value={inviteForm.department}
+                    onChange={(e) => setInviteForm({ ...inviteForm, department: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="e.g., IT, Marketing, Operations"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Hourly Rate ($)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={inviteForm.hourlyRate}
-                      onChange={(e) => setInviteForm({ ...inviteForm, hourlyRate: e.target.value })}
-                      className="oklok-input"
-                      placeholder="0.00"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Hourly Rate ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={inviteForm.hourlyRate}
+                    onChange={(e) => setInviteForm({ ...inviteForm, hourlyRate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="0.00"
+                  />
+                </div>
 
-                  <div className="flex items-center justify-end gap-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => setShowInviteModal(false)}
-                      className="oklok-button-secondary"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="oklok-button-primary disabled:opacity-50"
-                    >
-                      {loading ? (
-                        <>
-                          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                          Sending...
-                        </>
-                      ) : (
-                        <>
-                          <PaperAirplaneIcon className="h-4 w-4 mr-2" />
-                          Send Invitation
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
-              </div>
+                <div className="flex items-center justify-end gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowInviteModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <PaperAirplaneIcon className="h-4 w-4 mr-2" />
+                        Send Invitation
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
