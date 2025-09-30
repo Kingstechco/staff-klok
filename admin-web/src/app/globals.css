@@ -441,6 +441,21 @@
     @apply animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent;
   }
 
+  /* Clock Spinner Animations */
+  .oklok-clock-spinner {
+    display: inline-block;
+  }
+
+  .oklok-clock-minute-hand {
+    animation: oklok-clock-minute 2s linear infinite;
+    transform-origin: 12px 12px;
+  }
+
+  .oklok-clock-hour-hand {
+    animation: oklok-clock-hour 8s linear infinite;
+    transform-origin: 12px 12px;
+  }
+
   /* Pulse Loading Animation */
   .oklok-pulse-slow {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -628,6 +643,24 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes oklok-clock-minute {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes oklok-clock-hour {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 

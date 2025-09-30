@@ -11,34 +11,96 @@ export default function LoadingSpinner({
   color = 'primary', 
   className = '' 
 }: LoadingSpinnerProps) {
-  const getSizeClass = () => {
+  const getSizeConfig = () => {
     switch (size) {
       case 'sm':
-        return 'oklok-spinner-sm';
+        return { width: 16, height: 16, strokeWidth: 1.5 };
       case 'md':
-        return 'oklok-spinner';
+        return { width: 20, height: 20, strokeWidth: 2 };
       case 'lg':
-        return 'oklok-spinner-lg';
+        return { width: 24, height: 24, strokeWidth: 2 };
     }
   };
 
-  const getColorClass = () => {
+  const getColor = () => {
     switch (color) {
       case 'primary':
-        return '';
+        return '#4F46E5'; // indigo-600
       case 'white':
-        return 'oklok-spinner-white';
+        return '#FFFFFF';
       case 'gray':
-        return 'border-gray-400 border-t-transparent';
+        return '#6B7280'; // gray-500
     }
   };
+
+  const { width, height, strokeWidth } = getSizeConfig();
+  const strokeColor = getColor();
 
   return (
     <div 
-      className={`${getSizeClass()} ${getColorClass()} ${className}`}
+      className={`inline-block ${className}`}
       role="status"
       aria-label="Loading"
     >
+      <svg
+        width={width}
+        height={height}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="oklok-clock-spinner"
+      >
+        {/* Clock face */}
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          fill="none"
+          opacity="0.3"
+        />
+        
+        {/* Clock tick marks */}
+        <g stroke={strokeColor} strokeWidth={strokeWidth * 0.8} opacity="0.4">
+          <line x1="12" y1="2" x2="12" y2="4" />
+          <line x1="22" y1="12" x2="20" y2="12" />
+          <line x1="12" y1="22" x2="12" y2="20" />
+          <line x1="2" y1="12" x2="4" y2="12" />
+        </g>
+        
+        {/* Spinning minute hand */}
+        <line
+          x1="12"
+          y1="12"
+          x2="12"
+          y2="6"
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          className="oklok-clock-minute-hand"
+        />
+        
+        {/* Spinning hour hand */}
+        <line
+          x1="12"
+          y1="12"
+          x2="15"
+          y2="9"
+          stroke={strokeColor}
+          strokeWidth={strokeWidth * 1.2}
+          strokeLinecap="round"
+          className="oklok-clock-hour-hand"
+        />
+        
+        {/* Center dot */}
+        <circle
+          cx="12"
+          cy="12"
+          r={strokeWidth * 0.8}
+          fill={strokeColor}
+        />
+      </svg>
       <span className="oklok-sr-only">Loading...</span>
     </div>
   );
