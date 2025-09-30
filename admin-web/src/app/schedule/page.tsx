@@ -9,15 +9,13 @@ export default function SchedulePage() {
   const { currentUser } = useAuth();
   const { 
     shifts, 
-    templates, 
+    templates,
     getWeekSchedule, 
-    getScheduleStats, 
-    createShift, 
-    updateShift, 
+    getScheduleStats,
+    updateShift,
+    createShift,
     deleteShift,
-    createTemplate,
-    generateScheduleFromTemplate,
-    checkScheduleConflicts 
+    generateScheduleFromTemplate
   } = useSchedule();
 
   const [selectedWeek, setSelectedWeek] = useState(() => {
@@ -28,8 +26,10 @@ export default function SchedulePage() {
     return monday;
   });
 
-  const [viewMode, setViewMode] = useState<'week' | 'templates'>('week');
+  const [viewMode, setViewMode] = useState<'list' | 'calendar' | 'templates'>('list');
+  const [draggedShift, setDraggedShift] = useState<Shift | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ day: Date; hour: number } | null>(null);
   const [editingShift, setEditingShift] = useState<Shift | null>(null);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
 
@@ -47,6 +47,18 @@ export default function SchedulePage() {
 
   const weekSchedule = getWeekSchedule(selectedWeek);
   const weekStats = getScheduleStats(selectedWeek);
+
+  // Generate time slots from 6 AM to 11 PM
+  const timeSlots = useMemo(() => {
+    const slots = [];
+    for (let hour = 6; hour <= 23; hour++) {
+      slots.push({
+        hour,
+        display: hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : hour === 0 ? '12 AM' : `${hour} AM`
+      });
+    }
+    return slots;
+  }, []);
 
   const weekDays = useMemo(() => {
     const days = [];
@@ -75,6 +87,74 @@ export default function SchedulePage() {
       month: 'short', 
       day: 'numeric' 
     });
+  };
+
+  const timeToPosition = (timeStr: string): number => {
+    const [hour, minute] = timeStr.split(':').map(Number);
+    const totalMinutes = hour * 60 + minute;
+    const startMinutes = 6 * 60; // 6 AM
+    return ((totalMinutes - startMinutes) / 60) * 60; // 60px per hour
+  };
+
+  const calculateShiftHeight = (shift: Shift): number => {
+    const [startHour, startMinute] = shift.startTime.split(':').map(Number);
+    const [endHour, endMinute] = shift.endTime.split(':').map(Number);
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = endHour * 60 + endMinute;
+    const durationMinutes = endMinutes - startMinutes;
+    return (durationMinutes / 60) * 60; // 60px per hour
+  };
+
+  const handleDragStart = (e: React.DragEvent, shift: Shift) => {
+    setDraggedShift(shift);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetDay: Date, targetHour: number) => {
+    e.preventDefault();
+    if (!draggedShift) return;
+
+    const newDate = new Date(targetDay);
+    const newStartTime = `${targetHour.toString().padStart(2, '0')}:00`;
+    
+    // Calculate duration to maintain shift length
+    const [origStartHour, origStartMinute] = draggedShift.startTime.split(':').map(Number);
+    const [origEndHour, origEndMinute] = draggedShift.endTime.split(':').map(Number);
+    const durationMinutes = (origEndHour * 60 + origEndMinute) - (origStartHour * 60 + origStartMinute);
+    
+    const endTotalMinutes = (targetHour * 60) + durationMinutes;
+    const endHour = Math.floor(endTotalMinutes / 60);
+    const endMinute = endTotalMinutes % 60;
+    const newEndTime = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+
+    updateShift(draggedShift.id, {
+      date: newDate,
+      startTime: newStartTime,
+      endTime: newEndTime
+    });
+
+    setDraggedShift(null);
+  };
+
+  const handleTimeSlotClick = (day: Date, hour: number) => {
+    setSelectedTimeSlot({ day, hour });
+    setShowCreateModal(true);
+  };
+
+  const getShiftColor = (shift: Shift) => {
+    const colors = {
+      scheduled: 'bg-blue-100 border-blue-300 text-blue-800',
+      confirmed: 'bg-green-100 border-green-300 text-green-800',
+      completed: 'bg-gray-100 border-gray-300 text-gray-800',
+      'no-show': 'bg-red-100 border-red-300 text-red-800',
+      cancelled: 'bg-yellow-100 border-yellow-300 text-yellow-800'
+    };
+    return colors[shift.status] || colors.scheduled;
   };
 
   const getStatusColor = (status: Shift['status']) => {
@@ -121,19 +201,30 @@ export default function SchedulePage() {
                 {/* Enhanced View Mode Toggle */}
                 <div className="flex rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 p-1 shadow-inner">
                   <button
-                    onClick={() => setViewMode('week')}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
-                      viewMode === 'week' 
+                    onClick={() => setViewMode('list')}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+                      viewMode === 'list' 
+                        ? 'bg-gradient-to-r from-white to-gray-50 text-indigo-700 shadow-lg transform scale-105' 
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <ListIcon className="inline h-4 w-4 mr-2" />
+                    List
+                  </button>
+                  <button
+                    onClick={() => setViewMode('calendar')}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+                      viewMode === 'calendar' 
                         ? 'bg-gradient-to-r from-white to-gray-50 text-indigo-700 shadow-lg transform scale-105' 
                         : 'text-gray-500 hover:text-gray-700'
                     }`}
                   >
                     <CalendarIcon className="inline h-4 w-4 mr-2" />
-                    Weekly View
+                    Calendar
                   </button>
                   <button
                     onClick={() => setViewMode('templates')}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
                       viewMode === 'templates' 
                         ? 'bg-gradient-to-r from-white to-gray-50 text-indigo-700 shadow-lg transform scale-105' 
                         : 'text-gray-500 hover:text-gray-700'
@@ -146,12 +237,12 @@ export default function SchedulePage() {
                 
                 {/* Enhanced Add Button */}
                 <button
-                  onClick={() => viewMode === 'week' ? setShowCreateModal(true) : setShowTemplateModal(true)}
+                  onClick={() => viewMode === 'templates' ? setShowTemplateModal(true) : setShowCreateModal(true)}
                   className="group relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 font-bold shadow-xl hover:shadow-2xl hover:shadow-indigo-500/25 hover:scale-105 border-2 border-white/20"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/20 to-purple-400/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <PlusIcon className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
-                  {viewMode === 'week' ? 'Add Shift' : 'New Template'}
+                  {viewMode === 'templates' ? 'New Template' : 'Add Shift'}
                 </button>
               </div>
               
@@ -161,46 +252,48 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      <div className="px-4 sm:px-6 lg:px-8 py-8">
+      {/* Week Navigation - Show for list and calendar views */}
+      {(viewMode === 'list' || viewMode === 'calendar') && (
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigateWeek('prev')}
+                className="p-2.5 text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-300 hover:shadow-md group/btn"
+              >
+                <ChevronLeftIcon className="w-5 h-5 group-hover/btn:-translate-x-0.5 transition-transform duration-300" />
+              </button>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Week of {selectedWeek.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </h2>
+              <button
+                onClick={() => navigateWeek('next')}
+                className="p-2.5 text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-300 hover:shadow-md group/btn"
+              >
+                <ChevronRightIcon className="w-5 h-5 group-hover/btn:translate-x-0.5 transition-transform duration-300" />
+              </button>
+              <button
+                onClick={() => setSelectedWeek(new Date())}
+                className="px-4 py-2 text-sm font-bold bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 hover:from-indigo-200 hover:to-purple-200 rounded-lg transition-all duration-300 hover:shadow-md hover:scale-105"
+              >
+                Today
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-        {viewMode === 'week' ? (
+      <div className="px-4 sm:px-6 lg:px-8 py-8">
+        {/* List View */}
+        {viewMode === 'list' && (
           <>
-            {/* Enhanced Week Navigation & Stats */}
+            {/* Enhanced Week View & Stats */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
               <div className="group relative lg:col-span-2 bg-gradient-to-br from-white via-white to-gray-50/30 border border-gray-200/60 rounded-2xl p-6 hover:shadow-2xl hover:shadow-indigo-500/15 transition-all duration-500 overflow-hidden backdrop-blur-sm">
-                {/* Enhanced Background Pattern */}
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/30 via-transparent to-purple-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
-                {/* Floating Accent */}
                 <div className="absolute top-4 right-4 opacity-20">
                   <div className="h-2 w-2 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 animate-pulse" />
-                </div>
-                
-                <div className="relative flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-                  <h3 className="text-xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                    Week of {selectedWeek.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                  </h3>
-                  
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => navigateWeek('prev')}
-                      className="p-2.5 text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-300 hover:shadow-md group/btn"
-                    >
-                      <ChevronLeftIcon className="w-5 h-5 group-hover/btn:-translate-x-0.5 transition-transform duration-300" />
-                    </button>
-                    <button
-                      onClick={() => setSelectedWeek(new Date())}
-                      className="px-4 py-2 text-sm font-bold bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 hover:from-indigo-200 hover:to-purple-200 rounded-lg transition-all duration-300 hover:shadow-md hover:scale-105"
-                    >
-                      Today
-                    </button>
-                    <button
-                      onClick={() => navigateWeek('next')}
-                      className="p-2.5 text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-300 hover:shadow-md group/btn"
-                    >
-                      <ChevronRightIcon className="w-5 h-5 group-hover/btn:translate-x-0.5 transition-transform duration-300" />
-                    </button>
-                  </div>
                 </div>
 
                 {/* Enhanced Weekly Calendar Grid */}
@@ -250,7 +343,6 @@ export default function SchedulePage() {
                                   } 100%)`
                                 }}
                               >
-                                {/* Hover Overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 
                                 <div className="relative">
@@ -282,10 +374,8 @@ export default function SchedulePage() {
 
               {/* Enhanced Week Stats */}
               <div className="group relative bg-gradient-to-br from-white via-white to-indigo-50/30 border border-gray-200/60 rounded-2xl p-6 hover:shadow-2xl hover:shadow-indigo-500/15 transition-all duration-500 overflow-hidden backdrop-blur-sm">
-                {/* Enhanced Background Pattern */}
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/30 via-transparent to-purple-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
-                {/* Floating Decorative Elements */}
                 <div className="absolute top-4 right-4 opacity-20">
                   <div className="flex space-x-1">
                     <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 animate-pulse" />
@@ -363,10 +453,8 @@ export default function SchedulePage() {
 
             {/* Enhanced Quick Actions */}
             <div className="group relative bg-gradient-to-br from-white via-white to-purple-50/30 border border-gray-200/60 rounded-2xl p-6 mb-8 hover:shadow-2xl hover:shadow-purple-500/15 transition-all duration-500 overflow-hidden backdrop-blur-sm">
-              {/* Enhanced Background Pattern */}
               <div className="absolute inset-0 bg-gradient-to-br from-purple-50/30 via-transparent to-pink-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               
-              {/* Floating Decorative Elements */}
               <div className="absolute top-4 right-4 opacity-20">
                 <div className="flex space-x-1">
                   <div className="h-2 w-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 animate-pulse" />
@@ -389,7 +477,6 @@ export default function SchedulePage() {
                         className="group/btn relative p-4 border border-gray-200/60 rounded-xl hover:border-purple-300 hover:shadow-lg hover:shadow-purple-500/10 text-left transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-purple-50/20 overflow-hidden"
                         style={{ animationDelay: `${index * 100}ms` }}
                       >
-                        {/* Hover Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-r from-purple-50/30 to-pink-50/30 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
                         
                         <div className="relative">
@@ -406,7 +493,6 @@ export default function SchedulePage() {
                           </div>
                         </div>
                         
-                        {/* Apply Button */}
                         <div className="absolute top-2 right-2 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300">
                           <ArrowRightIcon className="h-4 w-4 text-purple-600" />
                         </div>
@@ -423,8 +509,112 @@ export default function SchedulePage() {
               </div>
             </div>
           </>
-        ) : (
-          /* Enhanced Templates View */
+        )}
+
+        {/* Calendar View */}
+        {viewMode === 'calendar' && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            {/* Calendar Header - Days of Week */}
+            <div className="grid grid-cols-8 border-b border-gray-200 bg-gray-50">
+              <div className="p-4 text-sm font-medium text-gray-500 border-r border-gray-200">
+                Time
+              </div>
+              {weekDays.map((day, index) => {
+                const isToday = day.toDateString() === new Date().toDateString();
+                return (
+                  <div
+                    key={index}
+                    className={`p-4 text-center border-r border-gray-200 last:border-r-0 ${
+                      isToday ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className={`text-sm font-medium ${isToday ? 'text-blue-600' : 'text-gray-500'}`}>
+                      {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                    </div>
+                    <div className={`text-lg font-semibold ${isToday ? 'text-blue-600' : 'text-gray-900'}`}>
+                      {day.getDate()}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Calendar Body - Time Grid */}
+            <div className="grid grid-cols-8">
+              {/* Time Column */}
+              <div className="border-r border-gray-200 bg-gray-50">
+                {timeSlots.map((slot) => (
+                  <div
+                    key={slot.hour}
+                    className="h-16 border-b border-gray-200 px-4 py-2 text-xs text-gray-500 font-medium"
+                  >
+                    {slot.display}
+                  </div>
+                ))}
+              </div>
+
+              {/* Day Columns */}
+              {weekDays.map((day, dayIndex) => {
+                const dayShifts = getShiftsForDay(day);
+                const isToday = day.toDateString() === new Date().toDateString();
+                
+                return (
+                  <div
+                    key={dayIndex}
+                    className={`relative border-r border-gray-200 last:border-r-0 ${
+                      isToday ? 'bg-blue-50/30' : ''
+                    }`}
+                  >
+                    {/* Time Slots */}
+                    {timeSlots.map((slot) => (
+                      <div
+                        key={slot.hour}
+                        className="h-16 border-b border-gray-200 cursor-pointer hover:bg-gray-50 relative"
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, day, slot.hour)}
+                        onClick={() => handleTimeSlotClick(day, slot.hour)}
+                      >
+                        <div className="absolute top-0 left-0 right-0 border-t border-gray-100"></div>
+                      </div>
+                    ))}
+
+                    {/* Shifts positioned absolutely */}
+                    {dayShifts.map((shift) => {
+                      const top = timeToPosition(shift.startTime);
+                      const height = calculateShiftHeight(shift);
+                      
+                      return (
+                        <div
+                          key={shift.id}
+                          className={`absolute left-1 right-1 rounded-md border-l-4 cursor-move shadow-sm hover:shadow-md transition-shadow ${getShiftColor(shift)}`}
+                          style={{
+                            top: `${top}px`,
+                            height: `${height}px`,
+                            zIndex: 10
+                          }}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, shift)}
+                          onClick={() => setEditingShift(shift)}
+                        >
+                          <div className="p-2 text-xs">
+                            <div className="font-semibold truncate">{shift.userName}</div>
+                            <div className="text-xs opacity-75">
+                              {shift.startTime} - {shift.endTime}
+                            </div>
+                            <div className="text-xs opacity-75 truncate">{shift.department}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Templates View */}
+        {viewMode === 'templates' && (
           <div className="group relative bg-gradient-to-br from-white to-gray-50/30 border border-gray-200/60 rounded-2xl p-6 hover:shadow-xl hover:shadow-gray-500/10 transition-all duration-300 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/20 via-transparent to-purple-50/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative flex justify-between items-center mb-6">
@@ -480,21 +670,72 @@ export default function SchedulePage() {
         )}
       </div>
 
-      {/* Modals would go here - simplified for now */}
+      {/* Modals */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
             <h3 className="text-lg font-semibold mb-4">Create New Shift</h3>
-            <p className="text-gray-600 mb-4">Shift creation form would go here</p>
-            <div className="flex justify-end gap-3">
+            {selectedTimeSlot && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={selectedTimeSlot.day.toISOString().split('T')[0]}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                  <input
+                    type="time"
+                    defaultValue={`${selectedTimeSlot.hour.toString().padStart(2, '0')}:00`}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                  <input
+                    type="time"
+                    defaultValue={`${(selectedTimeSlot.hour + 8).toString().padStart(2, '0')}:00`}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Employee</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="">Select employee...</option>
+                    <option value="john-doe">John Doe</option>
+                    <option value="jane-smith">Jane Smith</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="">Select department...</option>
+                    <option value="front-desk">Front Desk</option>
+                    <option value="housekeeping">Housekeeping</option>
+                    <option value="maintenance">Maintenance</option>
+                  </select>
+                </div>
+              </div>
+            )}
+            <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setSelectedTimeSlot(null);
+                }}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800"
               >
                 Cancel
               </button>
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setSelectedTimeSlot(null);
+                }}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
               >
                 Create
@@ -536,6 +777,14 @@ function CalendarIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  );
+}
+
+function ListIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
     </svg>
   );
 }
