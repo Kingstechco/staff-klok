@@ -28,7 +28,7 @@ export default function TopNavigation() {
 
           {/* Logo + Brand */}
           <Link href="/" className="flex items-center gap-3">
-            <OklokLogo size="sm" />
+            <OklokLogo size="sm" showText={false} />
             <div className="hidden sm:block">
               <span className="text-lg font-bold text-gray-900">
                 {currentTenant && currentTenant.name !== 'Oklok' ? currentTenant.name : 'Oklok'}

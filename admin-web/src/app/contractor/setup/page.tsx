@@ -540,7 +540,7 @@ export default function ContractorSetupPage() {
           <div className="flex justify-center mb-6">
             <OklokLogo size="lg" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Welcome to Oklok</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Welcome</h1>
           <p className="text-gray-600 mt-2">Complete your contractor setup to get started</p>
         </div>
 

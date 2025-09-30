@@ -15,7 +15,7 @@ import ErrorBoundary from "@/components/ui/ErrorBoundary";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Oklok - Employee Time Management",
+  title: "Employee Time Management",
   description: "Professional staff time tracking and management system",
   icons: {
     icon: '/favicon.svg',
