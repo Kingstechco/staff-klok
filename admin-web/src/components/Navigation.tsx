@@ -84,38 +84,65 @@ export default function Navigation() {
             </div>
           </div>
 
-          {/* Enhanced Logo Section with Prominent Hamburger Menu */}
-          <div className="relative flex h-16 shrink-0 items-center justify-between px-2">
-            {/* Logo Section */}
-            <Link href="/" className={`flex items-center p-2 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:scale-105 ${sidebarCollapsed ? 'justify-center' : 'space-x-3'}`}>
-              <div className="relative">
-                <OklokLogo size="md" />
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+          {/* Enhanced Logo Section with Hamburger Menu */}
+          <div className="relative flex h-16 shrink-0 items-center px-2">
+            {sidebarCollapsed ? (
+              /* Collapsed State - Stack vertically */
+              <div className="flex flex-col items-center justify-center w-full space-y-2">
+                {/* Hamburger Menu - Top */}
+                <button
+                  onClick={() => {
+                    console.log('Toggle clicked. Current state:', sidebarCollapsed);
+                    setSidebarCollapsed(!sidebarCollapsed);
+                    console.log('New state should be:', !sidebarCollapsed);
+                  }}
+                  className="flex-shrink-0 p-2 rounded-lg bg-gray-100 hover:bg-indigo-100 transition-all duration-300 shadow-sm hover:shadow-md border border-gray-300 hover:border-indigo-400"
+                  title="Expand sidebar"
+                >
+                  <Bars3Icon className="h-4 w-4 text-gray-600 hover:text-indigo-600 transition-colors duration-300" />
+                </button>
+                
+                {/* Logo - Bottom */}
+                <Link href="/" className="flex items-center p-1 rounded-lg hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300">
+                  <OklokLogo size="sm" />
+                </Link>
               </div>
-              {!sidebarCollapsed && (
-                <div className="flex flex-col flex-1 min-w-0">
-                  {/* Primary Brand/Tenant Name */}
-                  <span className="text-lg font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent group-hover:from-indigo-700 group-hover:to-purple-700 transition-all duration-300 truncate">
-                    {currentTenant && currentTenant.name !== 'Oklok' ? currentTenant.name : 'Oklok'}
-                  </span>
-                  {/* Subtitle - Only show if we have a custom tenant */}
-                  {currentTenant && currentTenant.name !== 'Oklok' && (
-                    <span className="text-xs font-semibold text-gray-500 group-hover:text-indigo-600 transition-colors duration-300 truncate">
-                      Powered by Oklok
+            ) : (
+              /* Expanded State - Side by side */
+              <>
+                <Link href="/" className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:scale-105 flex-1">
+                  <div className="relative">
+                    <OklokLogo size="md" />
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                  </div>
+                  <div className="flex flex-col flex-1 min-w-0">
+                    {/* Primary Brand/Tenant Name */}
+                    <span className="text-lg font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent group-hover:from-indigo-700 group-hover:to-purple-700 transition-all duration-300 truncate">
+                      {currentTenant && currentTenant.name !== 'Oklok' ? currentTenant.name : 'Oklok'}
                     </span>
-                  )}
-                </div>
-              )}
-            </Link>
-            
-            {/* Prominent Hamburger Menu Toggle - Always Visible */}
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="flex-shrink-0 p-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl text-white border-2 border-indigo-500 hover:border-indigo-400"
-              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              <Bars3Icon className="h-5 w-5" />
-            </button>
+                    {/* Subtitle - Only show if we have a custom tenant */}
+                    {currentTenant && currentTenant.name !== 'Oklok' && (
+                      <span className="text-xs font-semibold text-gray-500 group-hover:text-indigo-600 transition-colors duration-300 truncate">
+                        Powered by Oklok
+                      </span>
+                    )}
+                  </div>
+                </Link>
+                
+                {/* Hamburger Menu - Right side */}
+                <button
+                  onClick={() => {
+                    console.log('Toggle clicked. Current state:', sidebarCollapsed);
+                    setSidebarCollapsed(!sidebarCollapsed);
+                    console.log('New state should be:', !sidebarCollapsed);
+                  }}
+                  className="flex-shrink-0 p-2 rounded-lg bg-gray-100 hover:bg-indigo-100 transition-all duration-300 shadow-sm hover:shadow-md border border-gray-300 hover:border-indigo-400"
+                  title="Collapse sidebar"
+                >
+                  <Bars3Icon className="h-4 w-4 text-gray-600 hover:text-indigo-600 transition-colors duration-300" />
+                </button>
+              </>
+            )}
           </div>
 
           {/* Enhanced Navigation */}

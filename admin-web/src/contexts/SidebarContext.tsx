@@ -23,6 +23,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 
   // Save collapsed state to localStorage whenever it changes
   useEffect(() => {
+    console.log('SidebarContext: Saving state to localStorage:', sidebarCollapsed);
     localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
   }, [sidebarCollapsed]);
 
