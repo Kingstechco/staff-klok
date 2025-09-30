@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSchedule, Shift, ShiftTemplate } from '@/contexts/ScheduleContext';
+import TimeDisplay from '@/components/ui/TimeDisplay';
 
 export default function SchedulePage() {
   const { currentUser } = useAuth();
@@ -88,133 +89,270 @@ export default function SchedulePage() {
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Schedule Management</h1>
-              <p className="mt-1 sm:mt-2 text-gray-600">Manage staff schedules and shift templates</p>
+    <div className="min-h-screen bg-white">
+      {/* Enhanced Header */}
+      <div className="relative border-b border-gray-200/60 bg-gradient-to-r from-white via-white to-indigo-50/30 overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/10 via-transparent to-purple-50/10 opacity-50" />
+        
+        {/* Floating Decorative Elements */}
+        <div className="absolute top-4 right-8 opacity-20">
+          <div className="flex space-x-2">
+            <div className="h-2 w-2 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 animate-pulse" style={{ animationDelay: '0ms' }} />
+            <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 animate-pulse" style={{ animationDelay: '800ms' }} />
+          </div>
+        </div>
+        
+        <div className="relative px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            {/* Title Section */}
+            <div className="flex-1">
+              <h1 className="text-2xl font-black bg-gradient-to-r from-gray-900 via-gray-800 to-indigo-700 bg-clip-text text-transparent">
+                Schedule Management
+              </h1>
+              <p className="mt-1 text-sm font-semibold text-gray-600">
+                Manage staff schedules and shift templates
+              </p>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex rounded-lg bg-gray-100 p-1">
+            {/* Professional Time Display */}
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-4">
+                {/* Enhanced View Mode Toggle */}
+                <div className="flex rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 p-1 shadow-inner">
+                  <button
+                    onClick={() => setViewMode('week')}
+                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+                      viewMode === 'week' 
+                        ? 'bg-gradient-to-r from-white to-gray-50 text-indigo-700 shadow-lg transform scale-105' 
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <CalendarIcon className="inline h-4 w-4 mr-2" />
+                    Weekly View
+                  </button>
+                  <button
+                    onClick={() => setViewMode('templates')}
+                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+                      viewMode === 'templates' 
+                        ? 'bg-gradient-to-r from-white to-gray-50 text-indigo-700 shadow-lg transform scale-105' 
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <TemplateIcon className="inline h-4 w-4 mr-2" />
+                    Templates
+                  </button>
+                </div>
+                
+                {/* Enhanced Add Button */}
                 <button
-                  onClick={() => setViewMode('week')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'week' 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-500 hover:text-gray-900'
-                  }`}
+                  onClick={() => viewMode === 'week' ? setShowCreateModal(true) : setShowTemplateModal(true)}
+                  className="group relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 font-bold shadow-xl hover:shadow-2xl hover:shadow-indigo-500/25 hover:scale-105 border-2 border-white/20"
                 >
-                  Weekly View
-                </button>
-                <button
-                  onClick={() => setViewMode('templates')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'templates' 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-500 hover:text-gray-900'
-                  }`}
-                >
-                  Templates
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/20 to-purple-400/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <PlusIcon className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+                  {viewMode === 'week' ? 'Add Shift' : 'New Template'}
                 </button>
               </div>
               
-              <button
-                onClick={() => viewMode === 'week' ? setShowCreateModal(true) : setShowTemplateModal(true)}
-                className="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
-              >
-                <PlusIcon className="w-4 h-4 mr-2" />
-                {viewMode === 'week' ? 'Add Shift' : 'New Template'}
-              </button>
+              <TimeDisplay />
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="px-4 sm:px-6 lg:px-8 py-8">
 
         {viewMode === 'week' ? (
           <>
-            {/* Week Navigation & Stats */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 sm:mb-8">
-              <div className="lg:col-span-2 chart-container p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
+            {/* Enhanced Week Navigation & Stats */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+              <div className="group relative lg:col-span-2 bg-gradient-to-br from-white via-white to-gray-50/30 border border-gray-200/60 rounded-2xl p-6 hover:shadow-2xl hover:shadow-indigo-500/15 transition-all duration-500 overflow-hidden backdrop-blur-sm">
+                {/* Enhanced Background Pattern */}
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/30 via-transparent to-purple-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                {/* Floating Accent */}
+                <div className="absolute top-4 right-4 opacity-20">
+                  <div className="h-2 w-2 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 animate-pulse" />
+                </div>
+                
+                <div className="relative flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                  <h3 className="text-xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                     Week of {selectedWeek.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                   </h3>
                   
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => navigateWeek('prev')}
-                      className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                      className="p-2.5 text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-300 hover:shadow-md group/btn"
                     >
-                      <ChevronLeftIcon className="w-5 h-5" />
+                      <ChevronLeftIcon className="w-5 h-5 group-hover/btn:-translate-x-0.5 transition-transform duration-300" />
                     </button>
                     <button
                       onClick={() => setSelectedWeek(new Date())}
-                      className="px-3 py-1 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                      className="px-4 py-2 text-sm font-bold bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 hover:from-indigo-200 hover:to-purple-200 rounded-lg transition-all duration-300 hover:shadow-md hover:scale-105"
                     >
                       Today
                     </button>
                     <button
                       onClick={() => navigateWeek('next')}
-                      className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                      className="p-2.5 text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-300 hover:shadow-md group/btn"
                     >
-                      <ChevronRightIcon className="w-5 h-5" />
+                      <ChevronRightIcon className="w-5 h-5 group-hover/btn:translate-x-0.5 transition-transform duration-300" />
                     </button>
                   </div>
                 </div>
 
-                {/* Weekly Calendar Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-7 gap-2 sm:gap-1">
-                  {weekDays.map((day, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg sm:rounded-none sm:border-r-0 sm:last:border-r min-h-32">
-                      <div className="p-2 border-b border-gray-200 bg-gray-50">
-                        <div className="text-xs font-medium text-gray-900">{formatDate(day)}</div>
-                      </div>
-                      <div className="p-1 space-y-1">
-                        {getShiftsForDay(day).map((shift) => (
-                          <div
-                            key={shift.id}
-                            onClick={() => setEditingShift(shift)}
-                            className="p-2 rounded text-xs cursor-pointer hover:opacity-80 transition-opacity"
-                            style={{ backgroundColor: '#e0f2fe' }}
-                          >
-                            <div className="font-medium text-gray-900">{shift.userName}</div>
-                            <div className="text-gray-600">{shift.startTime}-{shift.endTime}</div>
-                            <div className="text-gray-500">{shift.department}</div>
+                {/* Enhanced Weekly Calendar Grid */}
+                <div className="relative grid grid-cols-1 sm:grid-cols-7 gap-3">
+                  {weekDays.map((day, index) => {
+                    const isToday = day.toDateString() === new Date().toDateString();
+                    const dayShifts = getShiftsForDay(day);
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className={`relative border rounded-xl min-h-[140px] transition-all duration-300 hover:shadow-lg hover:-translate-y-1 overflow-hidden ${
+                          isToday 
+                            ? 'border-indigo-300 bg-gradient-to-br from-indigo-50/50 to-purple-50/30 shadow-md shadow-indigo-500/10' 
+                            : 'border-gray-200/60 bg-gradient-to-br from-white to-gray-50/30 hover:border-indigo-200'
+                        }`}
+                      >
+                        {/* Day Header */}
+                        <div className={`p-3 border-b ${
+                          isToday 
+                            ? 'border-indigo-200 bg-gradient-to-r from-indigo-100 to-purple-100' 
+                            : 'border-gray-200/60 bg-gradient-to-r from-gray-50 to-gray-100/50'
+                        }`}>
+                          <div className={`text-xs font-bold uppercase tracking-wide ${
+                            isToday ? 'text-indigo-700' : 'text-gray-700'
+                          }`}>
+                            {formatDate(day)}
                           </div>
-                        ))}
+                          {isToday && (
+                            <div className="text-xs font-semibold text-indigo-600 mt-0.5">Today</div>
+                          )}
+                        </div>
+                        
+                        {/* Shifts Container */}
+                        <div className="p-2 space-y-2">
+                          {dayShifts.length > 0 ? (
+                            dayShifts.map((shift) => (
+                              <div
+                                key={shift.id}
+                                onClick={() => setEditingShift(shift)}
+                                className="group relative p-3 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-md overflow-hidden"
+                                style={{ 
+                                  background: `linear-gradient(135deg, ${
+                                    shift.status === 'confirmed' ? '#dcfce7' : '#e0f2fe'
+                                  } 0%, ${
+                                    shift.status === 'confirmed' ? '#bbf7d0' : '#bae6fd'
+                                  } 100%)`
+                                }}
+                              >
+                                {/* Hover Overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                
+                                <div className="relative">
+                                  <div className="font-bold text-xs text-gray-900 mb-1">{shift.userName}</div>
+                                  <div className="flex items-center gap-1 text-xs text-gray-700">
+                                    <ClockIcon className="h-3 w-3" />
+                                    {shift.startTime}-{shift.endTime}
+                                  </div>
+                                  <div className="text-xs text-gray-600 mt-1">{shift.department}</div>
+                                </div>
+                                
+                                {/* Status Badge */}
+                                <div className={`absolute top-1 right-1 px-1.5 py-0.5 rounded text-xs font-semibold ${getStatusColor(shift.status)}`}>
+                                  {shift.status}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-xs text-gray-400 text-center py-4">
+                              No shifts
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Week Stats */}
-              <div className="chart-container p-4 sm:p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Week Statistics</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total Shifts</span>
-                    <span className="font-semibold text-gray-900">{weekStats.totalShifts}</span>
+              {/* Enhanced Week Stats */}
+              <div className="group relative bg-gradient-to-br from-white via-white to-indigo-50/30 border border-gray-200/60 rounded-2xl p-6 hover:shadow-2xl hover:shadow-indigo-500/15 transition-all duration-500 overflow-hidden backdrop-blur-sm">
+                {/* Enhanced Background Pattern */}
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/30 via-transparent to-purple-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                {/* Floating Decorative Elements */}
+                <div className="absolute top-4 right-4 opacity-20">
+                  <div className="flex space-x-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 animate-pulse" />
+                    <div className="h-1 w-1 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 animate-pulse" style={{ animationDelay: '500ms' }} />
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total Hours</span>
-                    <span className="font-semibold text-gray-900">{weekStats.totalHours}h</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Staff Utilization</span>
-                    <span className="font-semibold text-gray-900">{weekStats.staffUtilization}%</span>
+                </div>
+                
+                <h3 className="relative text-xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-6 flex items-center gap-3">
+                  Week Statistics
+                  <div className="h-1 w-16 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full" />
+                </h3>
+                
+                <div className="relative space-y-5">
+                  {/* Stats Items */}
+                  <div className="group/stat flex justify-between items-center p-3 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300">
+                    <span className="text-sm font-semibold text-gray-600 flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500" />
+                      Total Shifts
+                    </span>
+                    <span className="text-lg font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                      {weekStats.totalShifts}
+                    </span>
                   </div>
                   
-                  <div className="pt-4 border-t border-gray-200">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">By Department</h4>
+                  <div className="group/stat flex justify-between items-center p-3 rounded-xl hover:bg-gradient-to-r hover:from-green-50/50 hover:to-emerald-50/30 transition-all duration-300">
+                    <span className="text-sm font-semibold text-gray-600 flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-gradient-to-r from-green-400 to-emerald-500" />
+                      Total Hours
+                    </span>
+                    <span className="text-lg font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                      {weekStats.totalHours}h
+                    </span>
+                  </div>
+                  
+                  <div className="group/stat flex justify-between items-center p-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-cyan-50/30 transition-all duration-300">
+                    <span className="text-sm font-semibold text-gray-600 flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500" />
+                      Staff Utilization
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                        {weekStats.staffUtilization}%
+                      </span>
+                      {/* Progress Bar */}
+                      <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-500"
+                          style={{ width: `${weekStats.staffUtilization}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Department Breakdown */}
+                  <div className="pt-5 border-t border-gray-200/60">
+                    <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">By Department</h4>
                     <div className="space-y-2">
-                      {Object.entries(weekStats.departmentBreakdown).map(([dept, count]) => (
-                        <div key={dept} className="flex justify-between items-center">
-                          <span className="text-xs text-gray-600">{dept}</span>
-                          <span className="text-xs font-medium text-gray-900">{count} shifts</span>
+                      {Object.entries(weekStats.departmentBreakdown).map(([dept, count], index) => (
+                        <div 
+                          key={dept} 
+                          className="flex justify-between items-center p-2 rounded-lg hover:bg-gradient-to-r hover:from-gray-50 hover:to-indigo-50/30 transition-all duration-300"
+                          style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                          <span className="text-xs font-semibold text-gray-600">{dept}</span>
+                          <span className="text-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                            {count} shifts
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -223,36 +361,89 @@ export default function SchedulePage() {
               </div>
             </div>
 
-            {/* Generate from Template */}
-            <div className="chart-container p-4 sm:p-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {templates.filter(t => t.isActive).map((template) => (
-                  <button
-                    key={template.id}
-                    onClick={() => generateScheduleFromTemplate(template.id, selectedWeek)}
-                    className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 text-left transition-colors"
-                  >
-                    <div className="font-medium text-gray-900 text-sm">{template.name}</div>
-                    <div className="text-xs text-gray-500 mt-1">{template.department}</div>
-                    <div className="text-xs text-gray-500">{template.startTime}-{template.endTime}</div>
-                  </button>
-                ))}
+            {/* Enhanced Quick Actions */}
+            <div className="group relative bg-gradient-to-br from-white via-white to-purple-50/30 border border-gray-200/60 rounded-2xl p-6 mb-8 hover:shadow-2xl hover:shadow-purple-500/15 transition-all duration-500 overflow-hidden backdrop-blur-sm">
+              {/* Enhanced Background Pattern */}
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-50/30 via-transparent to-pink-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              
+              {/* Floating Decorative Elements */}
+              <div className="absolute top-4 right-4 opacity-20">
+                <div className="flex space-x-1">
+                  <div className="h-2 w-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 animate-pulse" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-pink-400 to-indigo-500 animate-pulse" style={{ animationDelay: '500ms' }} />
+                </div>
+              </div>
+              
+              <h3 className="relative text-xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-6 flex items-center gap-3">
+                Quick Actions
+                <div className="h-1 w-20 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full" />
+              </h3>
+              
+              <div className="relative">
+                {templates.filter(t => t.isActive).length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {templates.filter(t => t.isActive).map((template, index) => (
+                      <button
+                        key={template.id}
+                        onClick={() => generateScheduleFromTemplate(template.id, selectedWeek)}
+                        className="group/btn relative p-4 border border-gray-200/60 rounded-xl hover:border-purple-300 hover:shadow-lg hover:shadow-purple-500/10 text-left transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-purple-50/20 overflow-hidden"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                      >
+                        {/* Hover Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-50/30 to-pink-50/30 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
+                        
+                        <div className="relative">
+                          <div className="font-bold text-sm text-gray-900 group-hover/btn:text-purple-700 transition-colors duration-300 mb-2">
+                            {template.name}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
+                            <BriefcaseIcon className="h-3 w-3" />
+                            <span>{template.department}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <ClockIcon className="h-3 w-3" />
+                            <span>{template.startTime}-{template.endTime}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Apply Button */}
+                        <div className="absolute top-2 right-2 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300">
+                          <ArrowRightIcon className="h-4 w-4 text-purple-600" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <TemplateIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm text-gray-500">No active templates available</p>
+                    <p className="text-xs text-gray-400 mt-1">Create templates to quickly generate schedules</p>
+                  </div>
+                )}
               </div>
             </div>
           </>
         ) : (
-          /* Templates View */
-          <div className="chart-container p-4 sm:p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Shift Templates</h3>
+          /* Enhanced Templates View */
+          <div className="group relative bg-gradient-to-br from-white to-gray-50/30 border border-gray-200/60 rounded-2xl p-6 hover:shadow-xl hover:shadow-gray-500/10 transition-all duration-300 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/20 via-transparent to-purple-50/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                Shift Templates
+                <div className="h-1 w-16 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full" />
+              </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {templates.map((template) => (
-                <div key={template.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start mb-3">
-                    <h4 className="font-semibold text-gray-900">{template.name}</h4>
+              {templates.map((template, index) => (
+                <div 
+                  key={template.id} 
+                  className="group relative border border-gray-200/60 rounded-2xl p-6 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-indigo-50/20 overflow-hidden"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/30 via-transparent to-purple-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="relative flex justify-between items-start mb-3">
+                    <h4 className="font-bold text-gray-900 group-hover:text-indigo-700 transition-colors duration-300">{template.name}</h4>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       template.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                     }`}>
@@ -337,6 +528,46 @@ function ChevronRightIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+    </svg>
+  );
+}
+
+function CalendarIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  );
+}
+
+function TemplateIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  );
+}
+
+function ClockIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
+function BriefcaseIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
     </svg>
   );
 }

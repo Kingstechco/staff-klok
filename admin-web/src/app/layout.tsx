@@ -27,15 +27,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-gray-50`}>
+      <body className={`${inter.className} bg-gradient-to-br from-gray-50 via-gray-50 to-indigo-50/30`}>
         <ErrorBoundary>
           <ToastProvider>
             <AuthProvider>
               <TimeTrackingProvider>
                 <ScheduleProvider>
                   <Navigation />
-                  <main className="min-h-screen">
-                    {children}
+                  <main className="lg:pl-72 relative">
+                    {/* Subtle background pattern to enhance the layered effect */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/10 via-transparent to-purple-50/10 opacity-30 pointer-events-none" />
+                    <div className="relative min-h-screen">
+                      {children}
+                    </div>
                   </main>
                 </ScheduleProvider>
               </TimeTrackingProvider>

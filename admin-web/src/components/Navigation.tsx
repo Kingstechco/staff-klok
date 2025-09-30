@@ -8,16 +8,16 @@ import OklokLogo from '@/components/ui/OklokLogo';
 
 export default function Navigation() {
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { currentUser, currentTenant, logout, canManageContractors, canApproveTimesheets } = useAuth();
 
   // Enhanced navigation with multi-tenant and contractor features
   const baseNavigation = [
-    { name: 'Dashboard', href: '/', icon: HomeIcon },
-    { name: 'Clock In/Out', href: '/clockin', icon: ClockIcon },
-    { name: 'Staff Management', href: '/staff', icon: UsersIcon, roles: ['admin', 'manager'] },
-    { name: 'Schedule', href: '/schedule', icon: CalendarIcon, roles: ['admin', 'manager'] },
-    { name: 'Reports', href: '/reports', icon: ChartIcon, roles: ['admin', 'manager'] },
+    { name: 'Dashboard', href: '/', icon: HomeIcon, description: 'Overview and metrics' },
+    { name: 'Time Tracking', href: '/clockin', icon: ClockIcon, description: 'Clock in and out' },
+    { name: 'Team', href: '/staff', icon: UsersIcon, roles: ['admin', 'manager'], description: 'Manage team members' },
+    { name: 'Schedule', href: '/schedule', icon: CalendarIcon, roles: ['admin', 'manager'], description: 'Plan and organize shifts' },
+    { name: 'Reports', href: '/reports', icon: ChartIcon, roles: ['admin', 'manager'], description: 'Analytics and insights' },
   ];
   
   // Add contractor-specific navigation items
@@ -27,7 +27,8 @@ export default function Navigation() {
       name: 'Contractors',
       href: '/contractors',
       icon: ContractorIcon,
-      roles: ['admin', 'manager', 'client_contact']
+      roles: ['admin', 'manager', 'client_contact'],
+      description: 'Manage contractor relationships'
     });
   }
   
@@ -37,7 +38,7 @@ export default function Navigation() {
       href: '/approvals',
       icon: ApprovalIcon,
       roles: ['admin', 'manager', 'client_contact'],
-      badge: true // Could show pending count
+      description: 'Review and approve timesheets'
     });
   }
   
@@ -48,7 +49,8 @@ export default function Navigation() {
       name: 'Settings',
       href: '/settings',
       icon: SettingsIcon,
-      roles: ['admin']
+      roles: ['admin'],
+      description: 'System configuration'
     });
   }
   
@@ -56,189 +58,292 @@ export default function Navigation() {
     .filter(item => !item.roles || (currentUser && item.roles.includes(currentUser.role)));
 
   return (
-    <nav className="oklok-header sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <Link 
-                href="/" 
-                className="flex items-center focus:outline-none focus:ring-2 focus:ring-indigo-500/20 rounded-lg p-1"
-                aria-label="Go to dashboard"
-              >
-                <OklokLogo size="md" />
-                {currentTenant && currentTenant.name !== 'Oklok' && (
-                  <div className="ml-3 border-l border-gray-300 pl-3">
-                    <h2 className="text-sm font-semibold text-gray-900">
-                      {currentTenant.name}
-                    </h2>
-                    <p className="text-xs text-gray-500 hidden sm:block">
-                      {currentTenant.businessType} • {currentTenant.subscription?.plan || 'trial'}
-                    </p>
-                  </div>
-                )}
-              </Link>
-            </div>
-            <div className="hidden md:ml-8 md:flex md:flex-wrap md:gap-x-2 xl:gap-x-4">
-              {navigation.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`oklok-nav-item min-h-[44px] whitespace-nowrap ${
-                      isActive ? 'oklok-nav-item-active' : ''
-                    }`}
-                    aria-current={isActive ? 'page' : undefined}
-                    aria-label={`Navigate to ${item.name}`}
-                  >
-                    <item.icon className="w-4 h-4 lg:w-5 lg:h-5 mr-2 flex-shrink-0" aria-hidden="true" />
-                    <span className="hidden lg:inline text-balance">{item.name}</span>
-                    <span className="lg:hidden">{item.name.split(' ')[0]}</span>
-                  </Link>
-                );
-              })}
+    <>
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Enhanced Desktop Sidebar with Elevated Appearance */}
+      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
+        {/* Main Sidebar Container with Enhanced Shadows and Depth */}
+        <div className="relative flex grow flex-col gap-y-5 overflow-y-auto bg-gradient-to-b from-white via-white to-gray-50/30 shadow-2xl shadow-indigo-500/10 border-r border-gray-200/60 px-6 pb-4">
+          {/* Subtle Background Pattern */}
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/10 via-transparent to-purple-50/10 opacity-50" />
+          
+          {/* Floating Decorative Elements */}
+          <div className="absolute top-4 right-4 opacity-20">
+            <div className="flex space-x-1">
+              <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 animate-pulse" style={{ animationDelay: '0ms' }} />
+              <div className="h-1 w-1 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 animate-pulse" style={{ animationDelay: '1000ms' }} />
             </div>
           </div>
-          
-          <div className="flex items-center">
-            <div className="hidden md:ml-6 md:flex md:items-center">
-              <div className="relative mr-3">
-                <button 
-                  className="p-2 text-gray-400 hover:text-gray-500 relative min-h-[44px] min-w-[44px] rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                  aria-label="View notifications"
-                >
-                  <BellIcon className="h-5 w-5 lg:h-6 lg:w-6" aria-hidden="true" />
-                  <span 
-                    className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"
-                    aria-label="You have new notifications"
-                  ></span>
-                </button>
+
+          {/* Enhanced Logo Section - Clean UX Design */}
+          <div className="relative flex h-16 shrink-0 items-center group">
+            <Link href="/" className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:scale-105 w-full">
+              <div className="relative">
+                <OklokLogo size="md" />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
               </div>
-              
-              <div className="relative group">
-                <button 
-                  className="flex items-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 rounded-xl p-2 min-h-[44px]"
-                  aria-label="User menu"
-                  aria-expanded="false"
-                  aria-haspopup="true"
-                >
-                  <div className="hidden lg:block mr-3 text-right">
-                    <p className="text-sm font-medium text-gray-900">{currentUser?.name || 'Guest'}</p>
-                    <p className="text-xs text-gray-500 capitalize">{currentUser?.role || 'No Role'} • {currentTenant?.name || 'Oklok'}</p>
-                  </div>
-                  <div 
-                    className="h-8 w-8 lg:h-10 lg:w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm lg:text-base"
-                    aria-hidden="true"
-                  >
-                    {currentUser?.name?.charAt(0) || 'G'}
-                  </div>
-                </button>
-                
-                {/* Dropdown Menu */}
-                <div 
-                  className="absolute right-0 mt-2 w-48 oklok-card opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50"
-                  role="menu"
-                  aria-orientation="vertical"
-                >
-                  <div className="py-2">
-                    <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900">{currentUser?.name}</p>
-                      <p className="text-xs text-gray-500">{currentUser?.email || 'No email'}</p>
-                    </div>
+              <div className="flex flex-col flex-1 min-w-0">
+                {/* Primary Brand/Tenant Name */}
+                <span className="text-lg font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent group-hover:from-indigo-700 group-hover:to-purple-700 transition-all duration-300 truncate">
+                  {currentTenant && currentTenant.name !== 'Oklok' ? currentTenant.name : 'Oklok'}
+                </span>
+                {/* Subtitle - Only show if we have a custom tenant */}
+                {currentTenant && currentTenant.name !== 'Oklok' && (
+                  <span className="text-xs font-semibold text-gray-500 group-hover:text-indigo-600 transition-colors duration-300 truncate">
+                    Powered by Oklok
+                  </span>
+                )}
+              </div>
+            </Link>
+          </div>
+
+          {/* Enhanced Navigation */}
+          <nav className="relative flex flex-1 flex-col">
+            <ul role="list" className="flex flex-1 flex-col gap-y-7">
+              <li>
+                <ul role="list" className="-mx-2 space-y-2">
+                  {navigation.map((item, index) => {
+                    const isActive = pathname === item.href;
+                    return (
+                      <li key={item.name} style={{ animationDelay: `${index * 100}ms` }}>
+                        <Link
+                          href={item.href}
+                          className={`group relative flex gap-x-3 rounded-2xl p-4 text-sm leading-6 font-semibold transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 ${
+                            isActive
+                              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-500/25 border-2 border-white/20'
+                              : 'text-gray-700 hover:text-indigo-700 hover:bg-gradient-to-r hover:from-indigo-50/80 hover:to-purple-50/60 hover:shadow-lg hover:shadow-indigo-500/10 border border-transparent hover:border-indigo-200/60'
+                          }`}
+                        >
+                          {/* Background Glow for Active Items */}
+                          {isActive && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/20 to-purple-400/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          )}
+                          
+                          {/* Icon Container with Enhanced Styling */}
+                          <div className={`relative inline-flex p-2 rounded-xl shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-300 ${
+                            isActive 
+                              ? 'bg-white/20 border border-white/30' 
+                              : 'bg-gray-100/60 group-hover:bg-indigo-100/80 border border-gray-200/60 group-hover:border-indigo-200'
+                          }`}>
+                            <item.icon
+                              className={`h-5 w-5 shrink-0 transition-all duration-300 ${
+                                isActive ? 'text-white group-hover:animate-pulse' : 'text-gray-600 group-hover:text-indigo-600'
+                              }`}
+                              aria-hidden="true"
+                            />
+                          </div>
+                          
+                          {/* Text Content */}
+                          <div className="relative flex flex-col flex-1">
+                            <span className={`font-bold transition-colors duration-300 ${
+                              isActive ? 'text-white' : 'text-gray-800 group-hover:text-indigo-700'
+                            }`}>{item.name}</span>
+                            <span className={`text-xs mt-0.5 font-medium transition-colors duration-300 ${
+                              isActive ? 'text-indigo-100' : 'text-gray-500 group-hover:text-indigo-600'
+                            }`}>{item.description}</span>
+                          </div>
+
+                          {/* Accent Line for Active Items */}
+                          {isActive && (
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-white/80 to-indigo-200 rounded-l-full shadow-lg" />
+                          )}
+
+                          {/* Shimmer Effect */}
+                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-300%] transition-transform duration-1500 rounded-2xl" />
+                          </div>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </li>
+
+              {/* Enhanced User Profile Section */}
+              <li className="mt-auto">
+                <div className="relative border-t border-gray-200/60 pt-6">
+                  {/* Subtle Glow Above Border */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-px bg-gradient-to-r from-transparent via-indigo-400/50 to-transparent" />
+                  
+                  <div className="group relative">
                     <button
-                      onClick={logout}
-                      className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors min-h-[44px] focus:outline-none focus:bg-red-50"
-                      role="menuitem"
-                      aria-label="Sign out of your account"
+                      className="flex w-full items-center gap-x-3 rounded-2xl p-4 text-sm leading-6 font-medium text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50/80 hover:to-purple-50/60 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:scale-105 hover:-translate-y-0.5 border border-transparent hover:border-indigo-200/60"
+                      aria-label="User menu"
                     >
-                      Sign Out
+                      {/* Enhanced Avatar */}
+                      <div className="relative">
+                        <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300 border-2 border-white/50">
+                          {currentUser?.name?.charAt(0) || 'G'}
+                        </div>
+                        {/* Online Status Indicator */}
+                        <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full border-2 border-white shadow-lg animate-pulse" />
+                      </div>
+                      
+                      {/* User Info */}
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-bold text-gray-900 group-hover:text-indigo-700 transition-colors duration-300">{currentUser?.name || 'Guest'}</p>
+                        <p className="text-xs font-semibold text-gray-500 capitalize group-hover:text-indigo-600 transition-colors duration-300">{currentUser?.role || 'No Role'}</p>
+                      </div>
+                      
+                      {/* Enhanced Chevron */}
+                      <div className="relative">
+                        <ChevronUpDownIcon className="h-4 w-4 text-gray-500 group-hover:text-indigo-600 transition-all duration-300 group-hover:animate-bounce" />
+                      </div>
                     </button>
+                    
+                    {/* Enhanced Dropdown Menu */}
+                    <div className="absolute bottom-full left-0 right-0 mb-3 bg-gradient-to-br from-white to-gray-50/50 rounded-2xl shadow-2xl shadow-indigo-500/20 border border-gray-200/60 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-300 z-50 backdrop-blur-sm">
+                      {/* Subtle Glow */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/30 via-transparent to-purple-50/30 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      
+                      <div className="relative p-3">
+                        <button
+                          onClick={logout}
+                          className="group/btn w-full text-left px-4 py-3 text-sm font-semibold text-red-600 hover:text-red-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-rose-50/80 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/10 hover:scale-105 border border-transparent hover:border-red-200/60"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="inline-flex p-1.5 rounded-lg bg-red-100 group-hover/btn:bg-red-200 transition-colors duration-300">
+                              <LogoutIcon className="h-3 w-3 text-red-600" />
+                            </div>
+                            <span>Sign out</span>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div className={`fixed inset-y-0 z-50 flex w-72 flex-col transition-transform duration-300 ease-in-out lg:hidden ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-gray-200 px-6 pb-4">
+          {/* Mobile Logo - Clean UX Design */}
+          <div className="flex h-16 shrink-0 items-center justify-between">
+            <Link href="/" className="flex items-center space-x-3 flex-1 min-w-0" onClick={() => setSidebarOpen(false)}>
+              <OklokLogo size="md" />
+              <div className="flex flex-col flex-1 min-w-0">
+                {/* Primary Brand/Tenant Name */}
+                <span className="text-lg font-bold text-gray-900 truncate">
+                  {currentTenant && currentTenant.name !== 'Oklok' ? currentTenant.name : 'Oklok'}
+                </span>
+                {/* Subtitle - Only show if we have a custom tenant */}
+                {currentTenant && currentTenant.name !== 'Oklok' && (
+                  <span className="text-xs text-gray-500 truncate">Powered by Oklok</span>
+                )}
               </div>
+            </Link>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="rounded-md p-2 text-gray-500 hover:bg-gray-100"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Mobile Navigation - Same as desktop */}
+          <nav className="flex flex-1 flex-col">
+            <ul role="list" className="flex flex-1 flex-col gap-y-7">
+              <li>
+                <ul role="list" className="-mx-2 space-y-1">
+                  {navigation.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                      <li key={item.name}>
+                        <Link
+                          href={item.href}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`group flex gap-x-3 rounded-md p-3 text-sm leading-6 font-medium transition-all duration-200 ${
+                            isActive
+                              ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-700'
+                              : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          <item.icon
+                            className={`h-5 w-5 shrink-0 ${
+                              isActive ? 'text-indigo-700' : 'text-gray-500 group-hover:text-indigo-600'
+                            }`}
+                            aria-hidden="true"
+                          />
+                          <div className="flex flex-col">
+                            <span>{item.name}</span>
+                            <span className="text-xs text-gray-500 mt-0.5">{item.description}</span>
+                          </div>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      {/* Mobile Top Bar */}
+      <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:hidden">
+        <button
+          type="button"
+          className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <span className="sr-only">Open sidebar</span>
+          <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+        </button>
+
+        <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+          <div className="flex flex-1 items-center justify-between">
+            <div className="flex items-center space-x-3 flex-1 min-w-0">
+              <OklokLogo size="sm" />
+              <span className="text-lg font-semibold text-gray-900 truncate">
+                {currentTenant && currentTenant.name !== 'Oklok' ? currentTenant.name : 'Oklok'}
+              </span>
             </div>
             
-            <div className="flex items-center md:hidden">
-              <button 
-                className="p-2 text-gray-400 hover:text-gray-500 relative mr-2 min-h-[44px] min-w-[44px] rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                aria-label="View notifications"
-              >
-                <BellIcon className="h-5 w-5" aria-hidden="true" />
-                <span 
-                  className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"
-                  aria-label="You have new notifications"
-                ></span>
+            {/* Mobile User Menu */}
+            <div className="relative group">
+              <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm">
+                  {currentUser?.name?.charAt(0) || 'G'}
+                </div>
+                <ChevronDownIcon className="h-4 w-4 text-gray-500" />
               </button>
               
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-gray-500 hover:bg-gray-100 min-h-[44px] min-w-[44px] transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-                aria-expanded={mobileMenuOpen}
-              >
-                <MenuIcon className="h-6 w-6" aria-hidden="true" />
-              </button>
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50">
+                <div className="p-2">
+                  <div className="px-3 py-2 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-900">{currentUser?.name}</p>
+                    <p className="text-xs text-gray-500">{currentUser?.email || 'No email'}</p>
+                  </div>
+                  <button
+                    onClick={logout}
+                    className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors mt-1"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-200/50 animate-slide-up">
-          <div className="pt-2 pb-3 space-y-1 oklok-glass">
-            {navigation.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`block mx-3 px-4 py-3 border-l-4 text-base font-medium transition-all duration-200 rounded-r-xl min-h-[44px] ${
-                    isActive
-                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                      : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
-                  }`}
-                  aria-current={isActive ? 'page' : undefined}
-                  aria-label={`Navigate to ${item.name}`}
-                >
-                  <div className="flex items-center">
-                    <item.icon className="w-5 h-5 mr-3" aria-hidden="true" />
-                    {item.name}
-                  </div>
-                </Link>
-              );
-            })}
-            <div className="border-t border-gray-200/50 pt-4 mt-4">
-              <div className="flex items-center px-6 py-3">
-                <div 
-                  className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium"
-                  aria-hidden="true"
-                >
-                  {currentUser?.name?.charAt(0) || 'G'}
-                </div>
-                <div className="ml-3 flex-1">
-                  <p className="text-base font-medium text-gray-900">{currentUser?.name || 'Guest'}</p>
-                  <p className="text-sm text-gray-500 capitalize">{currentUser?.role || 'No Role'}</p>
-                </div>
-              </div>
-              <div className="px-6 py-2">
-                <button
-                  onClick={logout}
-                  className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-colors min-h-[44px] focus:outline-none focus:bg-red-50 focus:ring-2 focus:ring-red-500/20"
-                  aria-label="Sign out of your account"
-                >
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </nav>
+    </>
   );
 }
 
+// Icon Components
 function HomeIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -263,14 +368,6 @@ function UsersIcon({ className }: { className?: string }) {
   );
 }
 
-function BellIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-    </svg>
-  );
-}
-
 function CalendarIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -283,14 +380,6 @@ function ChartIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-    </svg>
-  );
-}
-
-function MenuIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
     </svg>
   );
 }
@@ -316,6 +405,46 @@ function SettingsIcon({ className }: { className?: string }) {
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  );
+}
+
+function Bars3Icon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  );
+}
+
+function XMarkIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+}
+
+function ChevronUpDownIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  );
+}
+
+function LogoutIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
     </svg>
   );
 }

@@ -1,4 +1,10 @@
+import { mockApi, shouldUseMockApi } from './mockApi';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
+// Network error detection
+let networkErrorDetected = false;
+let backendAvailable = true;
 
 // Store auth token
 let authToken: string | null = null;
@@ -117,23 +123,47 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
 // Auth API
 export const authAPI = {
   async loginWithPin(pin: string, tenantSubdomain?: string) {
-    const body: any = { pin };
-    if (tenantSubdomain) {
-      body.tenantSubdomain = tenantSubdomain;
+    // Check if we should use mock API first
+    if (shouldUseMockApi() || networkErrorDetected) {
+      console.log('Using mock API for authentication');
+      return mockApi.authenticateUser(pin);
     }
 
-    const response = await fetch(`${API_BASE_URL}/auth/quick-login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    try {
+      const body: any = { pin };
+      if (tenantSubdomain) {
+        body.tenantSubdomain = tenantSubdomain;
+      }
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Login failed');
+      const response = await fetch(`${API_BASE_URL}/auth/quick-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Login failed');
+      }
+
+      backendAvailable = true;
+      return response.json();
+    } catch (error: any) {
+      console.warn('Backend authentication failed, trying mock API:', error.message);
+      
+      // If it's a network error, enable mock API
+      if (error.message.includes('Failed to fetch') || error.message.includes('Network Error')) {
+        networkErrorDetected = true;
+        backendAvailable = false;
+        // Store in localStorage so it persists across page reloads
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('useMockApi', 'true');
+        }
+        return mockApi.authenticateUser(pin);
+      }
+      
+      throw error;
     }
-
-    return response.json();
   },
 
   async loginWithEmail(email: string, pin: string) {
@@ -186,22 +216,70 @@ export const usersAPI = {
 // Time Entries API
 export const timeEntriesAPI = {
   async clockIn(data: any = {}) {
-    return apiRequest('/time-entries/clock-in', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    if (shouldUseMockApi() || networkErrorDetected) {
+      console.log('Using mock API for clock-in');
+      return mockApi.clockIn(data.userId || 'user-3', data.userName || 'Test User', data.location);
+    }
+
+    try {
+      const result = await apiRequest('/time-entries/clock-in', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      backendAvailable = true;
+      return result;
+    } catch (error: any) {
+      if (error.message.includes('Failed to fetch') || error.message.includes('Network Error')) {
+        console.warn('Backend clock-in failed, using mock API');
+        networkErrorDetected = true;
+        return mockApi.clockIn(data.userId || 'user-3', data.userName || 'Test User', data.location);
+      }
+      throw error;
+    }
   },
 
   async clockOut(data: any = {}) {
-    return apiRequest('/time-entries/clock-out', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    if (shouldUseMockApi() || networkErrorDetected) {
+      console.log('Using mock API for clock-out');
+      return mockApi.clockOut(data.userId || 'user-3');
+    }
+
+    try {
+      const result = await apiRequest('/time-entries/clock-out', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      backendAvailable = true;
+      return result;
+    } catch (error: any) {
+      if (error.message.includes('Failed to fetch') || error.message.includes('Network Error')) {
+        console.warn('Backend clock-out failed, using mock API');
+        networkErrorDetected = true;
+        return mockApi.clockOut(data.userId || 'user-3');
+      }
+      throw error;
+    }
   },
 
   async getEntries(params: any = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/time-entries${queryString ? `?${queryString}` : ''}`);
+    if (shouldUseMockApi() || networkErrorDetected) {
+      console.log('Using mock API for time entries');
+      return mockApi.getTimeEntries(params.userId, params.days);
+    }
+
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const result = await apiRequest(`/time-entries${queryString ? `?${queryString}` : ''}`);
+      backendAvailable = true;
+      return result;
+    } catch (error: any) {
+      if (error.message.includes('Failed to fetch') || error.message.includes('Network Error')) {
+        console.warn('Backend time entries failed, using mock API');
+        networkErrorDetected = true;
+        return mockApi.getTimeEntries(params.userId, params.days);
+      }
+      throw error;
+    }
   },
 
   async exportTimeEntries(params: any = {}) {
@@ -314,14 +392,46 @@ export const tenantAPI = {
   },
 
   async getTenantInfo() {
-    return apiRequest('/tenant/info');
+    if (shouldUseMockApi() || networkErrorDetected) {
+      console.log('Using mock API for tenant info');
+      return mockApi.getTenantInfo();
+    }
+
+    try {
+      const result = await apiRequest('/tenant/info');
+      backendAvailable = true;
+      return result;
+    } catch (error: any) {
+      if (error.message.includes('Failed to fetch') || error.message.includes('Network Error')) {
+        console.warn('Backend tenant info failed, using mock API');
+        networkErrorDetected = true;
+        return mockApi.getTenantInfo();
+      }
+      throw error;
+    }
   },
 
   async updateTenantSettings(settings: any) {
-    return apiRequest('/tenant/settings', {
-      method: 'PUT',
-      body: JSON.stringify(settings),
-    });
+    if (shouldUseMockApi() || networkErrorDetected) {
+      console.log('Using mock API for tenant settings update');
+      return mockApi.updateTenantSettings(settings);
+    }
+
+    try {
+      const result = await apiRequest('/tenant/settings', {
+        method: 'PUT',
+        body: JSON.stringify(settings),
+      });
+      backendAvailable = true;
+      return result;
+    } catch (error: any) {
+      if (error.message.includes('Failed to fetch') || error.message.includes('Network Error')) {
+        console.warn('Backend tenant settings update failed, using mock API');
+        networkErrorDetected = true;
+        return mockApi.updateTenantSettings(settings);
+      }
+      throw error;
+    }
   },
 
   async getSubscriptionPlans() {

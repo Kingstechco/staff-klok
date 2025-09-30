@@ -59,7 +59,22 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
     try {
       setLoading(true);
       const response = await timeEntriesAPI.getEntries();
-      const apiEntries = response.map((entry: any) => ({
+      
+      // Handle different response formats and ensure we have a valid array
+      let entriesArray = [];
+      if (Array.isArray(response)) {
+        entriesArray = response;
+      } else if (response && typeof response === 'object') {
+        entriesArray = response.entries || response.data || response.timeEntries || [];
+      }
+      
+      // Ensure entriesArray is actually an array
+      if (!Array.isArray(entriesArray)) {
+        console.warn('API response did not contain a valid entries array:', response);
+        entriesArray = [];
+      }
+      
+      const apiEntries = entriesArray.map((entry: any) => ({
         id: entry._id,
         userId: typeof entry.userId === 'object' ? entry.userId._id : entry.userId,
         userName: typeof entry.userId === 'object' ? entry.userId.name : entry.userName || 'Unknown',
