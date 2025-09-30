@@ -120,21 +120,36 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   return response.json();
 };
 
+// Custom error class for expected authentication failures
+class AuthenticationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AuthenticationError';
+    // Prevent this from being treated as an unhandled error in development
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      this.stack = undefined;
+    }
+  }
+}
+
 // Auth API
 export const authAPI = {
   async loginWithPin(pin: string, tenantSubdomain?: string) {
     // Check if we should use mock API first
     if (shouldUseMockApi() || networkErrorDetected) {
       try {
-        return await mockApi.authenticateUser(pin);
-      } catch (error) {
-        // For authentication errors, don't log to console as they're expected user errors
-        if (error instanceof Error && error.message === 'Invalid PIN') {
-          throw new Error('Invalid PIN');
+        const response = await mockApi.authenticateUser(pin);
+        if (!response.success) {
+          // Handle authentication failure with custom error class
+          throw new AuthenticationError(response.message || 'Authentication failed');
         }
-        // For unexpected errors, log them
-        console.error('Mock API authentication error:', error);
-        throw new Error(error instanceof Error ? error.message : 'Authentication failed');
+        return response;
+      } catch (error) {
+        // Only log unexpected errors, not authentication failures
+        if (!(error instanceof AuthenticationError)) {
+          console.error('Mock API authentication error:', error);
+        }
+        throw error;
       }
     }
 

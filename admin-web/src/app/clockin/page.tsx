@@ -63,6 +63,14 @@ export default function ClockIn() {
       await login(pin);
       setPin('');
     } catch (err: any) {
+      // Handle authentication errors silently (they're expected user behavior)
+      if (err.name === 'AuthenticationError' || err.message?.includes('Invalid PIN')) {
+        // Don't log authentication errors to console in development
+        // as they're expected user validation errors, not bugs
+      } else {
+        console.error('Unexpected login error:', err);
+      }
+      
       setError(err.message || 'Invalid PIN. Please try again.');
       setPin('');
       // Trigger shake animation for visual feedback
