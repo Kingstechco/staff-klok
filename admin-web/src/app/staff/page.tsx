@@ -93,7 +93,7 @@ export default function StaffDashboard() {
   };
 
   return (
-    <RouteGuard allowedRoles={['admin', 'manager']}>
+    <RouteGuard requiredRoles={['admin', 'manager']}>
       <div className="min-h-screen bg-white">
         {/* Enhanced Header */}
         <div className="relative border-b border-gray-200/60 bg-gradient-to-r from-white via-white to-indigo-50/30 overflow-hidden">
@@ -143,7 +143,7 @@ export default function StaffDashboard() {
                   </Link>
                 </div>
                 
-                <TimeDisplay />
+                <TimeDisplay collapsible />
               </div>
             </div>
           </div>

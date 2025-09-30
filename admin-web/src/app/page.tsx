@@ -233,7 +233,7 @@ export default function Home() {
 
             {/* Professional Time Display with Format Toggle */}
             <div className="lg:text-right">
-              <TimeDisplay />
+              <TimeDisplay collapsible />
             </div>
           </div>
         </div>

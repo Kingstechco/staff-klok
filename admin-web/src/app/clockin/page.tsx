@@ -480,6 +480,7 @@ export default function ClockIn() {
         <Toast
           type="error"
           message={showError}
+          visible={!!showError}
           onClose={() => setShowError(null)}
         />
       )}

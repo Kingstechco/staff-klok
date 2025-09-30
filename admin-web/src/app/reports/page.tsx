@@ -144,7 +144,7 @@ export default function ReportsPage() {
                   </button>
                 </div>
                 
-                <TimeDisplay />
+                <TimeDisplay collapsible />
               </div>
             </div>
           </div>

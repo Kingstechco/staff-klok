@@ -6,7 +6,9 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
 import { ScheduleProvider } from "@/contexts/ScheduleContext";
 import { ToastProvider } from "@/contexts/ToastContext";
+import { SidebarProvider } from "@/contexts/SidebarContext";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import DynamicLayout from "@/components/DynamicLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -33,14 +35,12 @@ export default function RootLayout({
             <AuthProvider>
               <TimeTrackingProvider>
                 <ScheduleProvider>
-                  <Navigation />
-                  <main className="lg:pl-72 relative">
-                    {/* Subtle background pattern to enhance the layered effect */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/10 via-transparent to-purple-50/10 opacity-30 pointer-events-none" />
-                    <div className="relative min-h-screen">
+                  <SidebarProvider>
+                    <Navigation />
+                    <DynamicLayout>
                       {children}
-                    </div>
-                  </main>
+                    </DynamicLayout>
+                  </SidebarProvider>
                 </ScheduleProvider>
               </TimeTrackingProvider>
             </AuthProvider>

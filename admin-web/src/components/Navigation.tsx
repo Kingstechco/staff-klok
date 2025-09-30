@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSidebar } from '@/contexts/SidebarContext';
 import OklokLogo from '@/components/ui/OklokLogo';
 
 export default function Navigation() {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { sidebarCollapsed, setSidebarCollapsed } = useSidebar();
   const { currentUser, currentTenant, logout, canManageContractors, canApproveTimesheets } = useAuth();
 
   // Enhanced navigation with multi-tenant and contractor features
@@ -68,7 +70,7 @@ export default function Navigation() {
       )}
 
       {/* Enhanced Desktop Sidebar with Elevated Appearance */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
+      <div className={`hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-72'}`}>
         {/* Main Sidebar Container with Enhanced Shadows and Depth */}
         <div className="relative flex grow flex-col gap-y-5 overflow-y-auto bg-gradient-to-b from-white via-white to-gray-50/30 shadow-2xl shadow-indigo-500/10 border-r border-gray-200/60 px-6 pb-4">
           {/* Subtle Background Pattern */}
@@ -83,25 +85,38 @@ export default function Navigation() {
           </div>
 
           {/* Enhanced Logo Section - Clean UX Design */}
-          <div className="relative flex h-16 shrink-0 items-center group">
-            <Link href="/" className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:scale-105 w-full">
+          <div className="relative flex h-16 shrink-0 items-center group justify-between">
+            <Link href="/" className={`flex items-center p-2 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:scale-105 ${sidebarCollapsed ? 'justify-center w-full' : 'space-x-3 w-auto'}`}>
               <div className="relative">
                 <OklokLogo size="md" />
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
               </div>
-              <div className="flex flex-col flex-1 min-w-0">
-                {/* Primary Brand/Tenant Name */}
-                <span className="text-lg font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent group-hover:from-indigo-700 group-hover:to-purple-700 transition-all duration-300 truncate">
-                  {currentTenant && currentTenant.name !== 'Oklok' ? currentTenant.name : 'Oklok'}
-                </span>
-                {/* Subtitle - Only show if we have a custom tenant */}
-                {currentTenant && currentTenant.name !== 'Oklok' && (
-                  <span className="text-xs font-semibold text-gray-500 group-hover:text-indigo-600 transition-colors duration-300 truncate">
-                    Powered by Oklok
+              {!sidebarCollapsed && (
+                <div className="flex flex-col flex-1 min-w-0">
+                  {/* Primary Brand/Tenant Name */}
+                  <span className="text-lg font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent group-hover:from-indigo-700 group-hover:to-purple-700 transition-all duration-300 truncate">
+                    {currentTenant && currentTenant.name !== 'Oklok' ? currentTenant.name : 'Oklok'}
                   </span>
-                )}
-              </div>
+                  {/* Subtitle - Only show if we have a custom tenant */}
+                  {currentTenant && currentTenant.name !== 'Oklok' && (
+                    <span className="text-xs font-semibold text-gray-500 group-hover:text-indigo-600 transition-colors duration-300 truncate">
+                      Powered by Oklok
+                    </span>
+                  )}
+                </div>
+              )}
             </Link>
+            
+            {/* Collapse Toggle Button */}
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="group/toggle p-2 rounded-xl hover:bg-gradient-to-r hover:from-gray-50/80 hover:to-indigo-50/60 transition-all duration-300 hover:shadow-lg hover:shadow-gray-500/10 hover:scale-105 border border-transparent hover:border-gray-200/60"
+              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              <div className={`h-4 w-4 text-gray-500 group-hover/toggle:text-indigo-600 transition-all duration-300 transform ${sidebarCollapsed ? 'rotate-180' : ''}`}>
+                <ChevronLeftIcon className="h-4 w-4" />
+              </div>
+            </button>
           </div>
 
           {/* Enhanced Navigation */}
@@ -115,11 +130,12 @@ export default function Navigation() {
                       <li key={item.name} style={{ animationDelay: `${index * 100}ms` }}>
                         <Link
                           href={item.href}
-                          className={`group relative flex gap-x-3 rounded-2xl p-4 text-sm leading-6 font-semibold transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 ${
+                          className={`group relative flex rounded-2xl p-4 text-sm leading-6 font-semibold transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 ${sidebarCollapsed ? 'justify-center' : 'gap-x-3'} ${
                             isActive
                               ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-500/25 border-2 border-white/20'
                               : 'text-gray-700 hover:text-indigo-700 hover:bg-gradient-to-r hover:from-indigo-50/80 hover:to-purple-50/60 hover:shadow-lg hover:shadow-indigo-500/10 border border-transparent hover:border-indigo-200/60'
                           }`}
+                          title={sidebarCollapsed ? item.name : undefined}
                         >
                           {/* Background Glow for Active Items */}
                           {isActive && (
@@ -141,14 +157,16 @@ export default function Navigation() {
                           </div>
                           
                           {/* Text Content */}
-                          <div className="relative flex flex-col flex-1">
-                            <span className={`font-bold transition-colors duration-300 ${
-                              isActive ? 'text-white' : 'text-gray-800 group-hover:text-indigo-700'
-                            }`}>{item.name}</span>
-                            <span className={`text-xs mt-0.5 font-medium transition-colors duration-300 ${
-                              isActive ? 'text-indigo-100' : 'text-gray-500 group-hover:text-indigo-600'
-                            }`}>{item.description}</span>
-                          </div>
+                          {!sidebarCollapsed && (
+                            <div className="relative flex flex-col flex-1">
+                              <span className={`font-bold transition-colors duration-300 ${
+                                isActive ? 'text-white' : 'text-gray-800 group-hover:text-indigo-700'
+                              }`}>{item.name}</span>
+                              <span className={`text-xs mt-0.5 font-medium transition-colors duration-300 ${
+                                isActive ? 'text-indigo-100' : 'text-gray-500 group-hover:text-indigo-600'
+                              }`}>{item.description}</span>
+                            </div>
+                          )}
 
                           {/* Accent Line for Active Items */}
                           {isActive && (
@@ -174,8 +192,9 @@ export default function Navigation() {
                   
                   <div className="group relative">
                     <button
-                      className="flex w-full items-center gap-x-3 rounded-2xl p-4 text-sm leading-6 font-medium text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50/80 hover:to-purple-50/60 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:scale-105 hover:-translate-y-0.5 border border-transparent hover:border-indigo-200/60"
+                      className={`flex w-full items-center rounded-2xl p-4 text-sm leading-6 font-medium text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50/80 hover:to-purple-50/60 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:scale-105 hover:-translate-y-0.5 border border-transparent hover:border-indigo-200/60 ${sidebarCollapsed ? 'justify-center' : 'gap-x-3'}`}
                       aria-label="User menu"
+                      title={sidebarCollapsed ? `${currentUser?.name || 'Guest'} (${currentUser?.role || 'No Role'})` : undefined}
                     >
                       {/* Enhanced Avatar */}
                       <div className="relative">
@@ -187,19 +206,23 @@ export default function Navigation() {
                       </div>
                       
                       {/* User Info */}
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-bold text-gray-900 group-hover:text-indigo-700 transition-colors duration-300">{currentUser?.name || 'Guest'}</p>
-                        <p className="text-xs font-semibold text-gray-500 capitalize group-hover:text-indigo-600 transition-colors duration-300">{currentUser?.role || 'No Role'}</p>
-                      </div>
-                      
-                      {/* Enhanced Chevron */}
-                      <div className="relative">
-                        <ChevronUpDownIcon className="h-4 w-4 text-gray-500 group-hover:text-indigo-600 transition-all duration-300 group-hover:animate-bounce" />
-                      </div>
+                      {!sidebarCollapsed && (
+                        <>
+                          <div className="flex-1 text-left">
+                            <p className="text-sm font-bold text-gray-900 group-hover:text-indigo-700 transition-colors duration-300">{currentUser?.name || 'Guest'}</p>
+                            <p className="text-xs font-semibold text-gray-500 capitalize group-hover:text-indigo-600 transition-colors duration-300">{currentUser?.role || 'No Role'}</p>
+                          </div>
+                          
+                          {/* Enhanced Chevron */}
+                          <div className="relative">
+                            <ChevronUpDownIcon className="h-4 w-4 text-gray-500 group-hover:text-indigo-600 transition-all duration-300 group-hover:animate-bounce" />
+                          </div>
+                        </>
+                      )}
                     </button>
                     
                     {/* Enhanced Dropdown Menu */}
-                    <div className="absolute bottom-full left-0 right-0 mb-3 bg-gradient-to-br from-white to-gray-50/50 rounded-2xl shadow-2xl shadow-indigo-500/20 border border-gray-200/60 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-300 z-50 backdrop-blur-sm">
+                    <div className={`absolute bottom-full mb-3 bg-gradient-to-br from-white to-gray-50/50 rounded-2xl shadow-2xl shadow-indigo-500/20 border border-gray-200/60 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-300 z-50 backdrop-blur-sm ${sidebarCollapsed ? 'left-full ml-3 w-48' : 'left-0 right-0'}`}>
                       {/* Subtle Glow */}
                       <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/30 via-transparent to-purple-50/30 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       
@@ -445,6 +468,14 @@ function LogoutIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+    </svg>
+  );
+}
+
+function ChevronLeftIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
     </svg>
   );
 }

@@ -319,7 +319,7 @@ export default function ContractorsPage() {
                 </button>
               </div>
               
-              <TimeDisplay />
+              <TimeDisplay collapsible />
             </div>
           </div>
         </div>
