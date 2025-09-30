@@ -54,7 +54,7 @@ export default function Sidebar() {
     .filter(item => !item.roles || (currentUser && item.roles.includes(currentUser.role)));
 
   return (
-    <aside className={`fixed left-0 top-16 bottom-0 z-40 bg-white border-r border-gray-200 transition-all duration-300 ease-in-out ${
+    <aside className={`fixed left-0 top-16 bottom-0 z-40 bg-white border-r border-gray-200 transition-all duration-300 ease-in-out overflow-hidden ${
       sidebarCollapsed ? 'w-16' : 'w-64'
     }`}>
       <nav className="h-full px-3 py-4 overflow-y-auto">
@@ -75,9 +75,9 @@ export default function Sidebar() {
                   title={sidebarCollapsed ? item.name : undefined}
                 >
                   <item.icon className={`${sidebarCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0`} />
-                  <span className={`font-medium transition-opacity duration-200 ${
-                    sidebarCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
-                  }`}>{item.name}</span>
+                  {!sidebarCollapsed && (
+                    <span className="font-medium whitespace-nowrap">{item.name}</span>
+                  )}
                 </Link>
               </li>
             );
