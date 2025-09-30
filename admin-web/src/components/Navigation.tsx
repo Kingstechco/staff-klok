@@ -107,13 +107,13 @@ export default function Navigation() {
               )}
             </Link>
             
-            {/* Collapse Toggle Button */}
+            {/* Collapse Toggle Button - Hamburger Menu */}
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 rounded-xl bg-gray-100 hover:bg-indigo-100 transition-all duration-300 border border-gray-300 hover:border-indigo-400"
+              className="p-2 rounded-xl bg-white hover:bg-indigo-50 transition-all duration-300 border-2 border-gray-200 hover:border-indigo-300 shadow-md hover:shadow-lg"
               title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
-              <ChevronLeftIcon className={`h-4 w-4 text-gray-700 transition-all duration-300 transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
+              <Bars3Icon className="h-5 w-5 text-gray-700 hover:text-indigo-600 transition-colors duration-300" />
             </button>
           </div>
 
@@ -470,10 +470,3 @@ function LogoutIcon({ className }: { className?: string }) {
   );
 }
 
-function ChevronLeftIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-    </svg>
-  );
-}
