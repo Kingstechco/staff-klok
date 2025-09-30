@@ -12,11 +12,11 @@ export default function Sidebar() {
 
   // Enhanced navigation with multi-tenant and contractor features
   const baseNavigation = [
-    { name: 'Dashboard', href: '/', icon: HomeIcon, description: 'Overview and metrics' },
-    { name: 'Time Tracking', href: '/clockin', icon: ClockIcon, description: 'Clock in and out' },
-    { name: 'Team', href: '/staff', icon: UsersIcon, roles: ['admin', 'manager'], description: 'Manage team members' },
-    { name: 'Schedule', href: '/schedule', icon: CalendarIcon, roles: ['admin', 'manager'], description: 'Plan and organize shifts' },
-    { name: 'Reports', href: '/reports', icon: ChartIcon, roles: ['admin', 'manager'], description: 'Analytics and insights' },
+    { name: 'Dashboard', href: '/', icon: HomeIcon },
+    { name: 'Time Tracking', href: '/clockin', icon: ClockIcon },
+    { name: 'Team', href: '/staff', icon: UsersIcon, roles: ['admin', 'manager'] },
+    { name: 'Schedule', href: '/schedule', icon: CalendarIcon, roles: ['admin', 'manager'] },
+    { name: 'Reports', href: '/reports', icon: ChartIcon, roles: ['admin', 'manager'] },
   ];
   
   // Add contractor-specific navigation items
@@ -26,8 +26,7 @@ export default function Sidebar() {
       name: 'Contractors',
       href: '/contractors',
       icon: ContractorIcon,
-      roles: ['admin', 'manager', 'client_contact'],
-      description: 'Manage contractor relationships'
+      roles: ['admin', 'manager', 'client_contact']
     });
   }
   
@@ -36,8 +35,7 @@ export default function Sidebar() {
       name: 'Approvals',
       href: '/approvals',
       icon: ApprovalIcon,
-      roles: ['admin', 'manager', 'client_contact'],
-      description: 'Review and approve timesheets'
+      roles: ['admin', 'manager', 'client_contact']
     });
   }
   
@@ -48,8 +46,7 @@ export default function Sidebar() {
       name: 'Settings',
       href: '/settings',
       icon: SettingsIcon,
-      roles: ['admin'],
-      description: 'System configuration'
+      roles: ['admin']
     });
   }
   
@@ -75,12 +72,12 @@ export default function Sidebar() {
                       ? 'bg-indigo-100 text-indigo-700'
                       : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }`}
-                  title={sidebarCollapsed ? `${item.name} - ${item.description}` : undefined}
+                  title={sidebarCollapsed ? item.name : undefined}
                 >
                   <item.icon className={`${sidebarCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0`} />
-                  {!sidebarCollapsed && (
-                    <span className="font-medium">{item.name}</span>
-                  )}
+                  <span className={`font-medium transition-opacity duration-200 ${
+                    sidebarCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+                  }`}>{item.name}</span>
                 </Link>
               </li>
             );
