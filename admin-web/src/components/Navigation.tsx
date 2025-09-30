@@ -85,55 +85,38 @@ export default function Navigation() {
           </div>
 
           {/* Enhanced Logo Section with Hamburger Menu */}
-          <div className="relative flex h-16 shrink-0 items-center px-2">
-            {sidebarCollapsed ? (
-              /* Collapsed State - Stack vertically */
-              <div className="flex flex-col items-center justify-center w-full space-y-2">
-                {/* Hamburger Menu - Top */}
-                <button
-                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  className="flex-shrink-0 p-2 rounded-lg bg-gray-100 hover:bg-indigo-100 transition-all duration-300 shadow-sm hover:shadow-md border border-gray-300 hover:border-indigo-400"
-                  title="Expand sidebar"
-                >
-                  <Bars3Icon className="h-4 w-4 text-gray-600 hover:text-indigo-600 transition-colors duration-300" />
-                </button>
-                
-                {/* Logo - Bottom */}
-                <Link href="/" className="flex items-center p-1 rounded-lg hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300">
-                  <OklokLogo size="sm" />
-                </Link>
+          <div className="relative flex h-16 shrink-0 items-center justify-between px-2">
+            {/* Logo Section - Always Visible */}
+            <Link href="/" className={`flex items-center p-2 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:scale-105 ${sidebarCollapsed ? 'justify-center' : 'space-x-3 flex-1'}`}>
+              <div className="relative">
+                <OklokLogo size={sidebarCollapsed ? "sm" : "md"} />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
               </div>
-            ) : (
-              /* Expanded State - Side by side */
-              <>
-                <Link href="/" className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:scale-105 flex-1">
-                  <div className="relative">
-                    <OklokLogo size="md" />
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
-                  </div>
-                  <div className="flex flex-col flex-1 min-w-0">
-                    {/* Primary Brand/Tenant Name */}
-                    <span className="text-lg font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent group-hover:from-indigo-700 group-hover:to-purple-700 transition-all duration-300 truncate">
-                      {currentTenant && currentTenant.name !== 'Oklok' ? currentTenant.name : 'Oklok'}
+              {!sidebarCollapsed && (
+                <div className="flex flex-col flex-1 min-w-0">
+                  {/* Primary Brand/Tenant Name */}
+                  <span className="text-lg font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent group-hover:from-indigo-700 group-hover:to-purple-700 transition-all duration-300 truncate">
+                    {currentTenant && currentTenant.name !== 'Oklok' ? currentTenant.name : 'Oklok'}
+                  </span>
+                  {/* Subtitle - Only show if we have a custom tenant */}
+                  {currentTenant && currentTenant.name !== 'Oklok' && (
+                    <span className="text-xs font-semibold text-gray-500 group-hover:text-indigo-600 transition-colors duration-300 truncate">
+                      Powered by Oklok
                     </span>
-                    {/* Subtitle - Only show if we have a custom tenant */}
-                    {currentTenant && currentTenant.name !== 'Oklok' && (
-                      <span className="text-xs font-semibold text-gray-500 group-hover:text-indigo-600 transition-colors duration-300 truncate">
-                        Powered by Oklok
-                      </span>
-                    )}
-                  </div>
-                </Link>
-                
-                {/* Hamburger Menu - Right side */}
-                <button
-                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  className="flex-shrink-0 p-2 rounded-lg bg-gray-100 hover:bg-indigo-100 transition-all duration-300 shadow-sm hover:shadow-md border border-gray-300 hover:border-indigo-400"
-                  title="Collapse sidebar"
-                >
-                  <Bars3Icon className="h-4 w-4 text-gray-600 hover:text-indigo-600 transition-colors duration-300" />
-                </button>
-              </>
+                  )}
+                </div>
+              )}
+            </Link>
+            
+            {/* Hamburger Menu Toggle - Only show when expanded */}
+            {!sidebarCollapsed && (
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="flex-shrink-0 p-2 rounded-lg bg-gray-100 hover:bg-indigo-100 transition-all duration-300 shadow-sm hover:shadow-md border border-gray-300 hover:border-indigo-400"
+                title="Collapse sidebar"
+              >
+                <Bars3Icon className="h-4 w-4 text-gray-600 hover:text-indigo-600 transition-colors duration-300" />
+              </button>
             )}
           </div>
 
@@ -148,12 +131,13 @@ export default function Navigation() {
                       <li key={item.name} style={{ animationDelay: `${index * 100}ms` }}>
                         <Link
                           href={item.href}
+                          onClick={sidebarCollapsed ? () => setSidebarCollapsed(false) : undefined}
                           className={`group relative flex rounded-2xl p-4 text-sm leading-6 font-semibold transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 ${sidebarCollapsed ? 'justify-center' : 'gap-x-3'} ${
                             isActive
                               ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-500/25 border-2 border-white/20'
                               : 'text-gray-700 hover:text-indigo-700 hover:bg-gradient-to-r hover:from-indigo-50/80 hover:to-purple-50/60 hover:shadow-lg hover:shadow-indigo-500/10 border border-transparent hover:border-indigo-200/60'
                           }`}
-                          title={sidebarCollapsed ? item.name : undefined}
+                          title={sidebarCollapsed ? `${item.name} - ${item.description}` : undefined}
                         >
                           {/* Background Glow for Active Items */}
                           {isActive && (
@@ -174,7 +158,7 @@ export default function Navigation() {
                             />
                           </div>
                           
-                          {/* Text Content */}
+                          {/* Text Content - Only show when expanded */}
                           {!sidebarCollapsed && (
                             <div className="relative flex flex-col flex-1">
                               <span className={`font-bold transition-colors duration-300 ${
