@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTimeDisplay } from '@/contexts/TimeDisplayContext';
 
 interface TimeDisplayProps {
   className?: string;
@@ -10,7 +11,7 @@ interface TimeDisplayProps {
 export default function TimeDisplay({ className = '', collapsible = false }: TimeDisplayProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [is24HourFormat, setIs24HourFormat] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed, toggleCollapsed } = useTimeDisplay();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -19,6 +20,19 @@ export default function TimeDisplay({ className = '', collapsible = false }: Tim
 
     return () => clearInterval(timer);
   }, []);
+
+  // Load 24-hour format preference from localStorage on mount
+  useEffect(() => {
+    const saved24HourFormat = localStorage.getItem('timeDisplay24Hour');
+    if (saved24HourFormat !== null) {
+      setIs24HourFormat(JSON.parse(saved24HourFormat));
+    }
+  }, []);
+
+  // Save 24-hour format preference to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('timeDisplay24Hour', JSON.stringify(is24HourFormat));
+  }, [is24HourFormat]);
 
   // Format time based on user preference
   const formatTime = (date: Date) => {
@@ -68,7 +82,7 @@ export default function TimeDisplay({ className = '', collapsible = false }: Tim
             {/* Collapse Toggle Button */}
             {collapsible && (
               <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
+                onClick={toggleCollapsed}
                 className="p-1 rounded-lg hover:bg-slate-100/80 transition-all duration-300 hover:shadow-md"
                 title="Expand time card"
               >
@@ -99,7 +113,7 @@ export default function TimeDisplay({ className = '', collapsible = false }: Tim
             {/* Collapse Toggle Button */}
             {collapsible && (
               <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
+                onClick={toggleCollapsed}
                 className="p-1 rounded-lg hover:bg-slate-100/80 transition-all duration-300 hover:shadow-md"
                 title="Collapse time card"
               >

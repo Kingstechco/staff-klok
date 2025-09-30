@@ -7,6 +7,7 @@ import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
 import { ScheduleProvider } from "@/contexts/ScheduleContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
+import { TimeDisplayProvider } from "@/contexts/TimeDisplayContext";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import DynamicLayout from "@/components/DynamicLayout";
 
@@ -36,10 +37,12 @@ export default function RootLayout({
               <TimeTrackingProvider>
                 <ScheduleProvider>
                   <SidebarProvider>
-                    <Navigation />
-                    <DynamicLayout>
-                      {children}
-                    </DynamicLayout>
+                    <TimeDisplayProvider>
+                      <Navigation />
+                      <DynamicLayout>
+                        {children}
+                      </DynamicLayout>
+                    </TimeDisplayProvider>
                   </SidebarProvider>
                 </ScheduleProvider>
               </TimeTrackingProvider>
