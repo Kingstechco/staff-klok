@@ -110,12 +110,10 @@ export default function Navigation() {
             {/* Collapse Toggle Button */}
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="group/toggle p-2 rounded-xl hover:bg-gradient-to-r hover:from-gray-50/80 hover:to-indigo-50/60 transition-all duration-300 hover:shadow-lg hover:shadow-gray-500/10 hover:scale-105 border border-transparent hover:border-gray-200/60"
+              className="p-2 rounded-xl bg-gray-100 hover:bg-indigo-100 transition-all duration-300 border border-gray-300 hover:border-indigo-400"
               title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
-              <div className={`h-4 w-4 text-gray-500 group-hover/toggle:text-indigo-600 transition-all duration-300 transform ${sidebarCollapsed ? 'rotate-180' : ''}`}>
-                <ChevronLeftIcon className="h-4 w-4" />
-              </div>
+              <ChevronLeftIcon className={`h-4 w-4 text-gray-700 transition-all duration-300 transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
             </button>
           </div>
 
