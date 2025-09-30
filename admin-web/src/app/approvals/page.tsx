@@ -306,7 +306,7 @@ const TimesheetApprovalInterface: React.FC = () => {
                 </div>
               </div>
               
-              <TimeDisplay />
+              <TimeDisplay collapsible />
             </div>
           </div>
         </div>

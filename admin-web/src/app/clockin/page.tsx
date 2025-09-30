@@ -127,7 +127,7 @@ export default function ClockIn() {
 
           {/* Enhanced Time Display */}
           <div className="flex justify-center mb-6">
-            <TimeDisplay />
+            <TimeDisplay collapsible />
           </div>
 
           {/* Enhanced PIN Form */}
@@ -241,7 +241,7 @@ export default function ClockIn() {
 
             {/* Professional Time Display with Format Toggle */}
             <div className="lg:text-right">
-              <TimeDisplay />
+              <TimeDisplay collapsible />
             </div>
           </div>
         </div>

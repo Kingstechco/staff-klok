@@ -155,7 +155,7 @@ export default function SchedulePage() {
                 </button>
               </div>
               
-              <TimeDisplay />
+              <TimeDisplay collapsible />
             </div>
           </div>
         </div>

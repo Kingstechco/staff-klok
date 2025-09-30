@@ -254,7 +254,7 @@ const TenantSettingsPage: React.FC = () => {
                 </button>
               </div>
               
-              <TimeDisplay />
+              <TimeDisplay collapsible />
             </div>
           </div>
         </div>
