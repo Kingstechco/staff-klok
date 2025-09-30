@@ -239,9 +239,20 @@ export default function ClockIn() {
               </div>
             </div>
 
-            {/* Professional Time Display with Format Toggle */}
-            <div className="lg:text-right">
-              <TimeDisplay collapsible />
+            {/* Action Buttons */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-indigo-600 bg-white border border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-md transition-all duration-300"
+              >
+                Refresh
+              </button>
+              <button
+                onClick={() => {/* Add logout functionality */}}
+                className="px-4 py-2 text-sm font-semibold text-red-600 hover:text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-all duration-300"
+              >
+                Switch User
+              </button>
             </div>
           </div>
         </div>
@@ -272,6 +283,14 @@ export default function ClockIn() {
                   isClockedIn ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-gradient-to-r from-gray-400 to-gray-500'
                 }`}></div>
                 {isClockedIn ? 'Currently Working' : 'Off Duty'}
+              </div>
+            </div>
+
+            {/* Current Time Display - Always Visible */}
+            <div className="relative mb-6">
+              <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">Current Time</p>
+              <div className="flex justify-center">
+                <TimeDisplay collapsible />
               </div>
             </div>
 
