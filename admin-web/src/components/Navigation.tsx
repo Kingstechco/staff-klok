@@ -84,9 +84,10 @@ export default function Navigation() {
             </div>
           </div>
 
-          {/* Enhanced Logo Section - Clean UX Design */}
-          <div className="relative flex h-16 shrink-0 items-center group justify-between">
-            <Link href="/" className={`flex items-center p-2 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:scale-105 ${sidebarCollapsed ? 'justify-center w-full' : 'space-x-3 w-auto'}`}>
+          {/* Enhanced Logo Section with Prominent Hamburger Menu */}
+          <div className="relative flex h-16 shrink-0 items-center justify-between px-2">
+            {/* Logo Section */}
+            <Link href="/" className={`flex items-center p-2 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:scale-105 ${sidebarCollapsed ? 'justify-center' : 'space-x-3'}`}>
               <div className="relative">
                 <OklokLogo size="md" />
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
@@ -107,13 +108,13 @@ export default function Navigation() {
               )}
             </Link>
             
-            {/* Collapse Toggle Button - Hamburger Menu */}
+            {/* Prominent Hamburger Menu Toggle - Always Visible */}
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 rounded-xl bg-white hover:bg-indigo-50 transition-all duration-300 border-2 border-gray-200 hover:border-indigo-300 shadow-md hover:shadow-lg"
+              className="flex-shrink-0 p-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl text-white border-2 border-indigo-500 hover:border-indigo-400"
               title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
-              <Bars3Icon className="h-5 w-5 text-gray-700 hover:text-indigo-600 transition-colors duration-300" />
+              <Bars3Icon className="h-5 w-5" />
             </button>
           </div>
 
