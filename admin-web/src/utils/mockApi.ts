@@ -87,7 +87,10 @@ export const mockApi = {
     
     const user = mockUsers.find(u => u.pin === pin);
     if (!user) {
-      throw new Error('Invalid PIN');
+      // Instead of throwing, create a proper error response
+      const error = new Error('Invalid PIN');
+      error.name = 'AuthenticationError';
+      throw error;
     }
     
     return {

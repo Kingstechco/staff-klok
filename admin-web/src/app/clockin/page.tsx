@@ -14,6 +14,7 @@ export default function ClockIn() {
   const [pin, setPin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [shake, setShake] = useState(false);
   const [wifiStatus] = useState('Store-WiFi-Main');
   const [showClockOutConfirm, setShowClockOutConfirm] = useState(false);
   const [showError, setShowError] = useState<string | null>(null);
@@ -64,6 +65,9 @@ export default function ClockIn() {
     } catch (err: any) {
       setError(err.message || 'Invalid PIN. Please try again.');
       setPin('');
+      // Trigger shake animation for visual feedback
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
     } finally {
       setIsLoading(false);
     }
@@ -136,14 +140,25 @@ export default function ClockIn() {
               <label htmlFor="pin" className="block text-sm font-bold text-gray-700 mb-3">
                 Enter your PIN
               </label>
-              <div className="relative group">
+              <div className={`relative group ${shake ? 'animate-shake' : ''}`}>
                 <input
                   id="pin"
                   type="password"
                   value={pin}
-                  onChange={(e) => setPin(e.target.value)}
+                  onChange={(e) => {
+                    setPin(e.target.value);
+                    // Clear error when user starts typing
+                    if (error) {
+                      setError('');
+                      setShake(false);
+                    }
+                  }}
                   placeholder="••••"
-                  className="w-full px-4 py-4 border-2 border-gray-300/60 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 text-center text-lg font-mono font-bold bg-gradient-to-br from-white to-gray-50/50 group-hover:shadow-lg transition-all duration-300"
+                  className={`w-full px-4 py-4 border-2 rounded-xl focus:ring-4 text-center text-lg font-mono font-bold bg-gradient-to-br from-white to-gray-50/50 group-hover:shadow-lg transition-all duration-300 ${
+                    error 
+                      ? 'border-red-300/60 focus:ring-red-500/20 focus:border-red-500' 
+                      : 'border-gray-300/60 focus:ring-indigo-500/20 focus:border-indigo-500'
+                  }`}
                   maxLength={6}
                   autoFocus
                   disabled={isLoading}

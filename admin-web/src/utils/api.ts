@@ -125,8 +125,17 @@ export const authAPI = {
   async loginWithPin(pin: string, tenantSubdomain?: string) {
     // Check if we should use mock API first
     if (shouldUseMockApi() || networkErrorDetected) {
-      console.log('Using mock API for authentication');
-      return mockApi.authenticateUser(pin);
+      try {
+        return await mockApi.authenticateUser(pin);
+      } catch (error) {
+        // For authentication errors, don't log to console as they're expected user errors
+        if (error instanceof Error && error.message === 'Invalid PIN') {
+          throw new Error('Invalid PIN');
+        }
+        // For unexpected errors, log them
+        console.error('Mock API authentication error:', error);
+        throw new Error(error instanceof Error ? error.message : 'Authentication failed');
+      }
     }
 
     try {
